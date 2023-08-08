@@ -9,14 +9,20 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/sample/server"
+            "program": "${workspaceFolder}/cmd/sample/server",
+            "args": [
+                "--port", "9000",
+            ]
         },
         {
             "name": "Sample Client",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/sample/client"
+            "program": "${workspaceFolder}/cmd/sample/client",
+            "args": [
+                "--port", "9000",
+            ]
         },
         {
             "name": "Gateway",
@@ -25,9 +31,10 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
             "args": [
-                "--listen-port", "9052",
-                "--connect-port", "9053",
-            ]
+                "--listen-port", "9090",
+                "--connect-port", "9000",
+            ],
+            "console": "integratedTerminal"
         }
     ]
 }

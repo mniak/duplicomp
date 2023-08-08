@@ -24,6 +24,7 @@ func main() {
 
 	pinger := Pinger{}
 
+	log.Println("Server Started. Waiting for calls.")
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
 	lo.Must0(server.Serve(lis))
@@ -38,7 +39,7 @@ func ptr[T any](t T) *T {
 }
 
 func (p Pinger) SendPing(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
-	log.Printf("PING %s", ping.Message)
+	log.Printf("PING %s", *ping.Message)
 
 	return &internal.Pong{
 		OriginalMessage:    ping.Message,

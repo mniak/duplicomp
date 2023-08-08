@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/brianvoe/gofakeit/v6 v6.23.1
 	github.com/samber/lo v1.38.1
+	go.uber.org/multierr v1.11.0
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 )
