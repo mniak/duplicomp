@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -14,14 +15,18 @@ import (
 )
 
 func main() {
-	lis := lo.Must(net.Listen("tcp", fmt.Sprintf("localhost:%d", internal.Port)))
+	var port int
+	flag.IntVar(&port, "port", internal.Port, "TCP port to listen")
+	flag.Parse()
+
+	lis := lo.Must(net.Listen("tcp", fmt.Sprintf("localhost:%d", port)))
 	defer lis.Close()
 
 	pinger := Pinger{}
 
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
-	server.Serve(lis)
+	lo.Must0(server.Serve(lis))
 }
 
 type Pinger struct {

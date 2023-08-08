@@ -17,6 +17,17 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/sample/client"
+        },
+        {
+            "name": "Gateway",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/gateway",
+            "args": [
+                "--listen-port", "9052",
+                "--connect-port", "9053",
+            ]
         }
     ]
 }
