@@ -21,6 +21,7 @@ func main() {
 
 	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUserAgent("sample-client/0.0.1"),
 	))
 	defer conn.Close()
 	client := internal.NewPingerClient(conn)

@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -31,6 +32,7 @@ func main() {
 
 	cliconn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", connectPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
 	))
 	defer lis.Close()
 
@@ -58,6 +60,8 @@ func (p *Proxy) Handler(srv interface{}, serverStream grpc.ServerStream) error {
 	if !hasName {
 		return status.Errorf(codes.NotFound, "Method name could not be determined")
 	}
+
+	ctx = copyHeadersFromIncomingToOutcoming(ctx)
 	log.Printf("Handling method %s", method)
 	defer log.Printf("Done handling method %s", method)
 
@@ -139,4 +143,16 @@ func (p *Proxy) clientToServer(ctx context.Context, cli grpc.ClientStream, srv g
 			}
 		}
 	}
+}
+
+func copyHeadersFromIncomingToOutcoming(ctx context.Context) context.Context {
+	meta, hasMeta := metadata.FromIncomingContext(ctx)
+	if hasMeta {
+		for k, vals := range meta {
+			for _, v := range vals {
+				ctx = metadata.AppendToOutgoingContext(ctx, k, v)
+			}
+		}
+	}
+	return ctx
 }
