@@ -16,7 +16,7 @@ import (
 
 func main() {
 	var port int
-	flag.IntVar(&port, "port", internal.Port, "TCP port to connect")
+	flag.IntVar(&port, "port", internal.DefaultPort, "TCP port to connect")
 	flag.Parse()
 
 	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", port),

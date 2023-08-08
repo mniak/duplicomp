@@ -1,5 +1,5 @@
 package internal
 
 const (
-	Port = 9000
+	DefaultPort = 9001
 )

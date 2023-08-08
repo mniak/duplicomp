@@ -17,7 +17,7 @@ import (
 
 func main() {
 	var port int
-	flag.IntVar(&port, "port", internal.Port, "TCP port to listen")
+	flag.IntVar(&port, "port", internal.DefaultPort, "TCP port to listen")
 	flag.Parse()
 
 	lis := lo.Must(net.Listen("tcp", fmt.Sprintf("localhost:%d", port)))

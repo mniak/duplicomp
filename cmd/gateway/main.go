@@ -22,22 +22,36 @@ import (
 
 func main() {
 	var listenPort int
-	flag.IntVar(&listenPort, "listen-port", 9090, "TCP port to listen")
-	var connectPort int
-	flag.IntVar(&connectPort, "connect-port", 9000, "TCP port to connect")
+	flag.IntVar(&listenPort, "listen-port", 9091, "TCP port to listen")
+	var primaryTarget string
+	flag.StringVar(&primaryTarget, "target", ":9001", "Connection target")
+	var shadowTarget string
+	flag.StringVar(&shadowTarget, "shadow-target", "", "Shadow connection target")
 	flag.Parse()
+
+	useShadow := shadowTarget != ""
 
 	lis := lo.Must(net.Listen("tcp", fmt.Sprintf(":%d", listenPort)))
 	defer lis.Close()
 
-	cliconn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", connectPort),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
+	clientCredentials := insecure.NewCredentials()
+
+	primaryClientConn := lo.Must(grpc.Dial(primaryTarget,
+		grpc.WithTransportCredentials(clientCredentials),
+		grpc.WithUserAgent("duplicomp-gateway/primary/0.0.1"),
 	))
-	defer lis.Close()
+	defer primaryClientConn.Close()
 
 	proxy := Proxy{
-		ClientConnection: cliconn,
+		PrimaryClientConnection: primaryClientConn,
+	}
+	if useShadow {
+		shadowClientConn := lo.Must(grpc.Dial(shadowTarget,
+			grpc.WithTransportCredentials(clientCredentials),
+			grpc.WithUserAgent("duplicomp-gateway/shadow/0.0.1"),
+		))
+		defer primaryClientConn.Close()
+		proxy.ShadowClientConnection = shadowClientConn
 	}
 
 	server := grpc.NewServer(grpc.UnknownServiceHandler(proxy.Handler))
@@ -49,14 +63,15 @@ func main() {
 }
 
 type Proxy struct {
-	ClientConnection *grpc.ClientConn
+	PrimaryClientConnection *grpc.ClientConn
+	ShadowClientConnection  *grpc.ClientConn
 }
 
-func (p *Proxy) Handler(srv interface{}, serverStream grpc.ServerStream) error {
-	ctx, stop := context.WithCancel(serverStream.Context())
+func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
+	ctx, stop := context.WithCancel(server.Context())
 	defer stop()
 
-	method, hasName := grpc.MethodFromServerStream(serverStream)
+	method, hasName := grpc.MethodFromServerStream(server)
 	if !hasName {
 		return status.Errorf(codes.NotFound, "Method name could not be determined")
 	}
@@ -65,17 +80,26 @@ func (p *Proxy) Handler(srv interface{}, serverStream grpc.ServerStream) error {
 	log.Printf("Handling method %s", method)
 	defer log.Printf("Done handling method %s", method)
 
-	clientStream, err := p.ClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
+	primaryClient, err := p.PrimaryClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
 	if err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
-	defer clientStream.CloseSend()
+	defer primaryClient.CloseSend()
+
+	var shadowClient grpc.ClientStream
+	if p.ShadowClientConnection != nil {
+		shadowClient, err = p.ShadowClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
+		if err != nil {
+			return status.Error(codes.Internal, err.Error())
+		}
+		defer shadowClient.CloseSend()
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var merr error
 	go func() {
-		err := p.clientToServer(ctx, clientStream, serverStream)
+		err := p.clientToServer(ctx, primaryClient, server)
 		if err != nil {
 			log.Printf("Client-to-Server failed: %s", err.Error())
 			multierr.AppendInto(&merr, err)
@@ -83,7 +107,7 @@ func (p *Proxy) Handler(srv interface{}, serverStream grpc.ServerStream) error {
 		wg.Done()
 	}()
 	go func() {
-		err := p.serverToClient(ctx, serverStream, clientStream)
+		err := p.serverToClient(ctx, server, primaryClient, shadowClient)
 		if err != nil {
 			log.Printf("Server-to-Client failed: %s", err.Error())
 			multierr.AppendInto(&merr, err)
@@ -99,7 +123,7 @@ func (p *Proxy) Handler(srv interface{}, serverStream grpc.ServerStream) error {
 	// return status.Errorf(codes.Unavailable, "Proxy failed")
 }
 
-func (p *Proxy) serverToClient(ctx context.Context, srv grpc.ServerStream, cli grpc.ClientStream) error {
+func (p *Proxy) serverToClient(ctx context.Context, srv grpc.ServerStream, primaryCli, shadowCli grpc.ClientStream) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -114,9 +138,17 @@ func (p *Proxy) serverToClient(ctx context.Context, srv grpc.ServerStream, cli g
 				return err
 			}
 
-			err = cli.SendMsg(msg)
+			err = primaryCli.SendMsg(msg)
 			if err != nil {
 				return err
+			}
+
+			// TODO: do something to avoid that a failure sending to the shadow to affect the connection
+			if shadowCli != nil {
+				err = shadowCli.SendMsg(msg)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

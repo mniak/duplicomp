@@ -11,7 +11,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/sample/server",
             "args": [
-                "--port", "9000",
+                "--port", "9001",
             ]
         },
         {
@@ -21,7 +21,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/sample/client",
             "args": [
-                "--port", "9000",
+                "--port", "9001",
             ]
         },
         {
@@ -31,8 +31,9 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
             "args": [
-                "--listen-port", "9090",
-                "--connect-port", "9000",
+                "--listen-port", "9091",
+                "--target", ":9001",
+                "--shadow-target", ":9002",
             ],
             "console": "integratedTerminal"
         }
