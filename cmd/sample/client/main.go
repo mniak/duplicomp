@@ -4,10 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/cmd/sample/internal"
@@ -23,23 +19,9 @@ func main() {
 	defer conn.Close()
 	client := internal.NewPingerClient(conn)
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGTERM, syscall.SIGABRT)
-
-	log.Print("Client started!")
-	for {
-		select {
-		case <-sig:
-		case <-time.After(5 * time.Second):
-			phrase := gofakeit.SentenceSimple()
-			resp, err := client.SendPing(context.Background(), &internal.Ping{
-				Message: &phrase,
-			})
-			if err != nil {
-				log.Printf("ERROR %s", err)
-				continue
-			}
-			log.Printf("PONG %s", resp)
-		}
-	}
+	phrase := gofakeit.SentenceSimple()
+	resp := lo.Must(client.SendPing(context.Background(), &internal.Ping{
+		Message: &phrase,
+	}))
+	log.Printf("PONG %s", resp)
 }
