@@ -12,6 +12,7 @@ import (
 	"github.com/mniak/duplicomp/cmd/sample/internal"
 	"github.com/samber/lo"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
@@ -39,7 +40,8 @@ func ptr[T any](t T) *T {
 }
 
 func (p Pinger) SendPing(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
-	log.Printf("PING %s", *ping.Message)
+	meta, hasMeta := metadata.FromIncomingContext(ctx)
+	log.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
 
 	return &internal.Pong{
 		OriginalMessage:    ping.Message,
