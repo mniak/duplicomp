@@ -1,0 +1,15 @@
+option go_package = "github.com/mniak/duplicomp/sample/internal";
+
+service Pinger {
+  rpc SendPing (Ping) returns (Pong) {}
+}
+
+message Ping {
+  required string message = 1;
+}
+
+message Pong {
+  required string original_message = 1;
+  required string capitalized_message = 2;
+  required int32 random_number = 3;
+}
