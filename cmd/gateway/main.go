@@ -89,6 +89,7 @@ func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
 	defer primaryClient.CloseSend()
 
 	osrv := p.receiveFromServer(ctx, server)
+	ocli := p.receiveFromClient(ctx, primaryClient)
 	// var shadowClient grpc.ClientStream
 	// if p.ShadowClientConnection != nil {
 	// 	shadowClient, err = p.ShadowClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
@@ -103,7 +104,17 @@ func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
 	var merr error
 	go func() {
 		defer wg.Done()
-		err := p.clientToServer(ctx, primaryClient, server)
+		for item := range ocli.Observe() {
+			if item.Error() {
+				err = item.E
+				break
+			}
+			msg := item.V.(proto.Message)
+			err = server.SendMsg(msg)
+			if err != nil {
+				break
+			}
+		}
 		if err != nil {
 			log.Printf("Client-to-Server failed: %s", err.Error())
 			multierr.AppendInto(&merr, err)
@@ -178,27 +189,29 @@ func (p *Proxy) receiveFromServer(ctx context.Context, srv grpc.ServerStream) rx
 	return obs
 }
 
-func (p *Proxy) clientToServer(ctx context.Context, cli grpc.ClientStream, srv grpc.ServerStream) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			msg := new(emptypb.Empty)
-			err := cli.RecvMsg(msg)
+func (p *Proxy) receiveFromClient(ctx context.Context, cli grpc.ClientStream) rxgo.Observable {
+	obs := rxgo.Create([]rxgo.Producer{func(ctx context.Context, next chan<- rxgo.Item) {
+		for {
+			select {
+			case <-ctx.Done():
+				next <- rxgo.Error(ctx.Err())
+				return
+			default:
+				msg := new(emptypb.Empty)
+				err := cli.RecvMsg(msg)
 
-			if errors.Is(err, io.EOF) {
-				return nil
-			} else if err != nil {
-				return err
-			}
+				if errors.Is(err, io.EOF) {
+					return
+				} else if err != nil {
+					next <- rxgo.Error(err)
+					return
+				}
 
-			err = srv.SendMsg(msg)
-			if err != nil {
-				return err
+				next <- rxgo.Of(msg)
 			}
 		}
-	}
+	}})
+	return obs
 }
 
 func copyHeadersFromIncomingToOutcoming(ctx context.Context) context.Context {

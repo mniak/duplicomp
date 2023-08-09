@@ -32,6 +32,7 @@ func main() {
 	ctx := metadata.NewOutgoingContext(context.Background(), meta)
 
 	phrase := gofakeit.SentenceSimple()
+	log.Printf("PING %s", phrase)
 	resp, err := client.SendPing(ctx, &internal.Ping{
 		Message: &phrase,
 	})
