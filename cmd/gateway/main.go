@@ -10,6 +10,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/reactivex/rxgo/v2"
 	"github.com/samber/lo"
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -86,33 +88,47 @@ func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
 	}
 	defer primaryClient.CloseSend()
 
-	var shadowClient grpc.ClientStream
-	if p.ShadowClientConnection != nil {
-		shadowClient, err = p.ShadowClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
-		if err != nil {
-			return status.Error(codes.Internal, err.Error())
-		}
-		defer shadowClient.CloseSend()
-	}
+	osrv := p.receiveFromServer(ctx, server)
+	// var shadowClient grpc.ClientStream
+	// if p.ShadowClientConnection != nil {
+	// 	shadowClient, err = p.ShadowClientConnection.NewStream(ctx, &grpc.StreamDesc{}, method)
+	// 	if err != nil {
+	// 		return status.Error(codes.Internal, err.Error())
+	// 	}
+	// 	defer shadowClient.CloseSend()
+	// }
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var merr error
 	go func() {
+		defer wg.Done()
 		err := p.clientToServer(ctx, primaryClient, server)
 		if err != nil {
 			log.Printf("Client-to-Server failed: %s", err.Error())
 			multierr.AppendInto(&merr, err)
 		}
-		wg.Done()
 	}()
 	go func() {
-		err := p.serverToClient(ctx, server, primaryClient, shadowClient)
+		defer wg.Done()
+		var err error
+		for item := range osrv.Observe() {
+			if item.Error() {
+				err = item.E
+				break
+			}
+			msg := item.V.(proto.Message)
+
+			err = primaryClient.SendMsg(msg)
+			if err != nil {
+				break
+			}
+		}
+
 		if err != nil {
 			log.Printf("Server-to-Client failed: %s", err.Error())
 			multierr.AppendInto(&merr, err)
 		}
-		wg.Done()
 	}()
 	wg.Wait()
 	if merr != nil {
@@ -123,35 +139,43 @@ func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
 	// return status.Errorf(codes.Unavailable, "Proxy failed")
 }
 
-func (p *Proxy) serverToClient(ctx context.Context, srv grpc.ServerStream, primaryCli, shadowCli grpc.ClientStream) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			msg := new(emptypb.Empty)
-			err := srv.RecvMsg(msg)
+func (p *Proxy) receiveFromServer(ctx context.Context, srv grpc.ServerStream) rxgo.Observable {
+	obs := rxgo.Create([]rxgo.Producer{func(ctx context.Context, next chan<- rxgo.Item) {
+		for {
+			select {
+			case <-ctx.Done():
+				next <- rxgo.Error(ctx.Err())
+				return
+			default:
+				msg := new(emptypb.Empty)
+				err := srv.RecvMsg(msg)
 
-			if errors.Is(err, io.EOF) {
-				return nil
-			} else if err != nil {
-				return err
-			}
-
-			err = primaryCli.SendMsg(msg)
-			if err != nil {
-				return err
-			}
-
-			// TODO: do something to avoid that a failure sending to the shadow to affect the connection
-			if shadowCli != nil {
-				err = shadowCli.SendMsg(msg)
-				if err != nil {
-					return err
+				if errors.Is(err, io.EOF) {
+					return
 				}
+				if err != nil {
+					next <- rxgo.Error(err)
+					return
+				}
+
+				next <- rxgo.Of(msg)
+
+				// err = primaryCli.SendMsg(msg)
+				// if err != nil {
+				// 	return err
+				// }
+
+				// // TODO: do something to avoid that a failure sending to the shadow to affect the connection
+				// if shadowCli != nil {
+				// 	err = shadowCli.SendMsg(msg)
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// }
 			}
 		}
-	}
+	}})
+	return obs
 }
 
 func (p *Proxy) clientToServer(ctx context.Context, cli grpc.ClientStream, srv grpc.ServerStream) error {
