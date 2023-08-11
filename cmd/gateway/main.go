@@ -26,8 +26,8 @@ type ProxyParams struct {
 	ShadowTarget  string
 }
 
-func StartProxy(params ProxyParams) (*Proxy, error) {
-	proxy := Proxy{
+func StartProxy(params ProxyParams) (*EstablishedConnection, error) {
+	proxy := EstablishedConnection{
 		UseShadow: params.ShadowTarget != "",
 	}
 
