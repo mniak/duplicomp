@@ -30,7 +30,7 @@ func (p *Proxy) Handler(_ any, protoServer grpc.ServerStream) error {
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
 	server := NewProtoStream(protoServer)
-	serverObservable := receiveFromStream(ctx, server)
+	serverObservable := ObservableFromStream(ctx, server)
 
 	if p.UseShadow {
 		go func() {

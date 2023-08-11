@@ -38,7 +38,7 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 		return err
 	}
 	in := NewProtoStream(protoIn)
-	clientObs := receiveFromStream(ctx, in)
+	clientObs := ObservableFromStream(ctx, in)
 
 	// Receive from server and forward to client
 	wg.Add(1)
@@ -79,7 +79,13 @@ func (op *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 	return err
 }
 
-func receiveFromStream(ctx context.Context, stream Stream) rxgo.Observable {
+func ObservableFromProtoStream(ctx context.Context, protoStream iProtoStream) rxgo.Observable {
+	stream := NewProtoStream(protoStream)
+	obs := ObservableFromStream(ctx, stream)
+	return obs
+}
+
+func ObservableFromStream(ctx context.Context, stream Stream) rxgo.Observable {
 	defer func() {
 		data := recover()
 		if data != nil {
