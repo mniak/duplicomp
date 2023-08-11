@@ -39,7 +39,7 @@ func (p *Proxy) Handler(_ any, protoServer grpc.ServerStream) error {
 				Method:            method,
 				Server:            server,
 				ServerObservable:  serverObservable,
-				InboundConnection: *p.ShadowClientConnection,
+				InboundConnection: p.ShadowClientConnection,
 				DiscardResponses:  true,
 			}
 			err := shadow.Run(ctx)
@@ -53,7 +53,7 @@ func (p *Proxy) Handler(_ any, protoServer grpc.ServerStream) error {
 		Method:            method,
 		Server:            server,
 		ServerObservable:  serverObservable,
-		InboundConnection: *p.PrimaryClientConnection,
+		InboundConnection: p.PrimaryClientConnection,
 	}
 	err := primary.Run(ctx)
 	if err != nil {

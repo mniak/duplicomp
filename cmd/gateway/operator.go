@@ -19,7 +19,7 @@ type Forwarder struct {
 	Method            string
 	Server            Stream
 	ServerObservable  rxgo.Observable
-	InboundConnection grpc.ClientConn
+	InboundConnection *grpc.ClientConn
 	DiscardResponses  bool
 }
 
