@@ -15,12 +15,12 @@ type Proxy struct {
 	ShadowClientConnection  *grpc.ClientConn
 }
 
-func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
-	ctx := server.Context()
+func (p *Proxy) Handler(_ any, protoServer grpc.ServerStream) error {
+	ctx := protoServer.Context()
 	ctx, stop := context.WithCancel(ctx)
 	defer stop()
 
-	method, hasName := grpc.MethodFromServerStream(server)
+	method, hasName := grpc.MethodFromServerStream(protoServer)
 	if !hasName {
 		return status.Errorf(codes.NotFound, "Method name could not be determined")
 	}
@@ -28,6 +28,8 @@ func (p *Proxy) Handler(_ any, server grpc.ServerStream) error {
 	defer log.Printf("Done handling method %s", method)
 
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
+
+	server := NewProtoStream(protoServer)
 	serverObservable := receiveFromStream(ctx, server)
 
 	if p.UseShadow {

@@ -12,14 +12,12 @@ import (
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Forwarder struct {
 	LogName           string
 	Method            string
-	Server            grpc.ServerStream
+	Server            Stream
 	ServerObservable  rxgo.Observable
 	InboundConnection grpc.ClientConn
 	DiscardResponses  bool
@@ -35,11 +33,11 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 
 	var wg sync.WaitGroup
 	var combinedErrors error
-	in, err := op.InboundConnection.NewStream(ctx, &grpc.StreamDesc{}, op.Method)
+	protoIn, err := op.InboundConnection.NewStream(ctx, &grpc.StreamDesc{}, op.Method)
 	if err != nil {
 		return err
 	}
-
+	in := NewProtoStream(protoIn)
 	clientObs := receiveFromStream(ctx, in)
 
 	// Receive from server and forward to client
@@ -55,7 +53,7 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			defer in.CloseSend()
+			defer protoIn.CloseSend()
 			err := op.forwardMessages(clientObs, op.Server)
 			multierr.AppendInto(&combinedErrors, err)
 		}()
@@ -65,19 +63,14 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 	return combinedErrors
 }
 
-type iStream interface {
-	SendMsg(m interface{}) error
-	RecvMsg(m interface{}) error
-}
-
-func (op *Forwarder) forwardMessages(from rxgo.Observable, to interface{ SendMsg(any) error }) error {
+func (op *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 	var err error
 	for item := range from.Observe() {
 		if item.Error() {
 			err = item.E
 			break
 		}
-		msg := item.V.(proto.Message)
+		msg := item.V.(Message)
 		err = to.SendMsg(msg)
 		if err != nil {
 			break
@@ -86,7 +79,7 @@ func (op *Forwarder) forwardMessages(from rxgo.Observable, to interface{ SendMsg
 	return err
 }
 
-func receiveFromStream(ctx context.Context, stream iStream) rxgo.Observable {
+func receiveFromStream(ctx context.Context, stream Stream) rxgo.Observable {
 	defer func() {
 		data := recover()
 		if data != nil {
@@ -101,8 +94,7 @@ func receiveFromStream(ctx context.Context, stream iStream) rxgo.Observable {
 				next <- rxgo.Error(ctx.Err())
 				return
 			default:
-				msg := new(emptypb.Empty)
-				err := stream.RecvMsg(msg)
+				msg, err := stream.RecvMsg()
 
 				if errors.Is(err, io.EOF) {
 					return
