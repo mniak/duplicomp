@@ -1,11 +1,12 @@
 package main
 
 import (
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Message struct {
-	internalMessage emptypb.Empty
+	internalMessage proto.Message
 }
 
 type Stream interface {
@@ -29,12 +30,14 @@ type protoStream struct {
 }
 
 func (s *protoStream) SendMsg(m Message) error {
-	err := s.stream.SendMsg(&m.internalMessage)
+	err := s.stream.SendMsg(m.internalMessage)
 	return err
 }
 
 func (s *protoStream) RecvMsg() (Message, error) {
-	var msg Message
-	err := s.stream.RecvMsg(&msg.internalMessage)
+	msg := Message{
+		internalMessage: new(emptypb.Empty),
+	}
+	err := s.stream.RecvMsg(msg.internalMessage)
 	return msg, err
 }
