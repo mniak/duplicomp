@@ -10,8 +10,8 @@ type Message struct {
 }
 
 type Stream interface {
-	SendMsg(m Message) error
-	RecvMsg() (Message, error)
+	Send(m Message) error
+	Receive() (Message, error)
 }
 
 type iProtoStream interface {
@@ -29,12 +29,12 @@ type protoStream struct {
 	stream iProtoStream
 }
 
-func (s *protoStream) SendMsg(m Message) error {
+func (s *protoStream) Send(m Message) error {
 	err := s.stream.SendMsg(m.internalMessage)
 	return err
 }
 
-func (s *protoStream) RecvMsg() (Message, error) {
+func (s *protoStream) Receive() (Message, error) {
 	msg := Message{
 		internalMessage: new(emptypb.Empty),
 	}

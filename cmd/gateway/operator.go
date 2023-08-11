@@ -71,7 +71,7 @@ func (op *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 			break
 		}
 		msg := item.V.(Message)
-		err = to.SendMsg(msg)
+		err = to.Send(msg)
 		if err != nil {
 			break
 		}
@@ -94,7 +94,7 @@ func receiveFromStream(ctx context.Context, stream Stream) rxgo.Observable {
 				next <- rxgo.Error(ctx.Err())
 				return
 			default:
-				msg, err := stream.RecvMsg()
+				msg, err := stream.Receive()
 
 				if errors.Is(err, io.EOF) {
 					return
