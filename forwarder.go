@@ -1,4 +1,4 @@
-package main
+package duplicomp
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type Forwarder struct {
 	DiscardResponses  bool
 }
 
-func (op *Forwarder) Run(ctx context.Context) (err error) {
+func (f *Forwarder) Run(ctx context.Context) (err error) {
 	defer func() {
 		data := recover()
 		if data != nil {
@@ -33,7 +33,7 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 
 	var wg sync.WaitGroup
 	var combinedErrors error
-	protoIn, err := op.InboundConnection.NewStream(ctx, &grpc.StreamDesc{}, op.Method)
+	protoIn, err := f.InboundConnection.NewStream(ctx, &grpc.StreamDesc{}, f.Method)
 	if err != nil {
 		return err
 	}
@@ -44,17 +44,17 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := op.forwardMessages(op.ServerObservable, in)
+		err := f.forwardMessages(f.ServerObservable, in)
 		multierr.AppendInto(&combinedErrors, err)
 	}()
 
 	// Receive from client and forward to server
-	if !op.DiscardResponses {
+	if !f.DiscardResponses {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			defer protoIn.CloseSend()
-			err := op.forwardMessages(clientObs, op.Server)
+			err := f.forwardMessages(clientObs, f.Server)
 			multierr.AppendInto(&combinedErrors, err)
 		}()
 	}
@@ -63,7 +63,7 @@ func (op *Forwarder) Run(ctx context.Context) (err error) {
 	return combinedErrors
 }
 
-func (op *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
+func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 	var err error
 	for item := range from.Observe() {
 		if item.Error() {
@@ -127,4 +127,14 @@ func copyHeadersFromIncomingToOutcoming(in, out context.Context) context.Context
 		}
 	}
 	return in
+}
+
+type Forwarder2 struct {
+	InboundStream Stream
+}
+
+func (fw *Forwarder2) Run() error {
+	fw.InboundStream.Receive()
+	fw.InboundStream.Receive()
+	return nil
 }

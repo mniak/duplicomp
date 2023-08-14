@@ -1,4 +1,4 @@
-package main
+package duplicomp
 
 import (
 	"google.golang.org/protobuf/proto"
@@ -11,7 +11,7 @@ type Message struct {
 
 type Stream interface {
 	Send(m Message) error
-	Receive() (Message, error)
+	Receive() (*Message, error)
 }
 
 type iProtoStream interface {
@@ -34,10 +34,10 @@ func (s *protoStream) Send(m Message) error {
 	return err
 }
 
-func (s *protoStream) Receive() (Message, error) {
+func (s *protoStream) Receive() (*Message, error) {
 	msg := Message{
 		internalMessage: new(emptypb.Empty),
 	}
 	err := s.stream.RecvMsg(msg.internalMessage)
-	return msg, err
+	return &msg, err
 }

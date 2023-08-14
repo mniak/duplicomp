@@ -3,11 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 
+	"github.com/mniak/duplicomp"
 	"github.com/samber/lo"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -26,50 +24,29 @@ type ProxyParams struct {
 	ShadowTarget  string
 }
 
-func StartProxy(params ProxyParams) (*EstablishedConnection, error) {
-	proxy := EstablishedConnection{
-		UseShadow: params.ShadowTarget != "",
-	}
+func StartProxy(params ProxyParams) error {
+	proxy := duplicomp.NewGRPCProxy(duplicomp.ProxyConfig{
+		InboundConfig: duplicomp.InboundConfig{
+			ListenAddress: fmt.Sprintf(":%d", params.ListenPort),
+		},
+		OutboundConfigs: []duplicomp.OutboundConfig{
+			{
+				TargetAddress: params.PrimaryTarget,
+			},
+			{
+				TargetAddress:  params.ShadowTarget,
+				IgnoreResponse: true,
+			},
+		},
+	})
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", params.ListenPort))
+	err := proxy.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer lis.Close()
-
-	clientCredentials := insecure.NewCredentials()
-	primaryClientConn, err := grpc.Dial(params.PrimaryTarget,
-		grpc.WithTransportCredentials(clientCredentials),
-		grpc.WithUserAgent("duplicomp-gateway/primary/0.0.1"),
-	)
+	err = proxy.Wait()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer primaryClientConn.Close()
-	proxy.PrimaryClientConnection = primaryClientConn
-
-	if proxy.UseShadow {
-		shadowClientConn, err := grpc.Dial(params.ShadowTarget,
-			grpc.WithTransportCredentials(clientCredentials),
-			grpc.WithUserAgent("duplicomp-gateway/shadow/0.0.1"),
-		)
-		if err != nil {
-			return nil, err
-		}
-		defer primaryClientConn.Close()
-		proxy.ShadowClientConnection = shadowClientConn
-	}
-
-	server := grpc.NewServer(grpc.UnknownServiceHandler(proxy.Handler))
-	server.RegisterService(&grpc.ServiceDesc{
-		ServiceName: "DummyService",
-		HandlerType: (*any)(nil),
-	}, nil)
-
-	err = server.Serve(lis)
-	if err != nil {
-		return nil, err
-	}
-
-	return &proxy, nil
+	return nil
 }

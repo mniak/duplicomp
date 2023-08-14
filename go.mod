@@ -6,6 +6,7 @@ require (
 	github.com/brianvoe/gofakeit/v6 v6.23.1
 	github.com/reactivex/rxgo/v2 v2.5.0
 	github.com/samber/lo v1.38.1
+	go.uber.org/mock v0.2.0
 	go.uber.org/multierr v1.11.0
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
