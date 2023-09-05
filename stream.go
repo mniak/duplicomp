@@ -5,6 +5,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+//go:generate mockgen -package=duplicomp -destination=mock_stream_test.go . Stream
 type Stream interface {
 	Send(m proto.Message) error
 	Receive() (proto.Message, error)
