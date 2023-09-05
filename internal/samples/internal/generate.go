@@ -7,3 +7,6 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 */
 
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go_opt=Mping.proto=github.com/mniak/duplicomp/internal/samples/internal ping.proto
+
+//go:generate mockgen -package=internal -destination=mock_pinger_server_test.go . PingerServer
+//go:generate mockgen -package=internal -destination=mock_pinger_client_test.go . PingerClient
