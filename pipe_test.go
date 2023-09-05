@@ -11,6 +11,32 @@ import (
 )
 
 func TestPipe_HappyPath(t *testing.T) {
+	t.Run("With one messages", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fakeMessage1 := new(any.Any)
+		gofakeit.Struct(*fakeMessage1)
+		require.NotNil(t, fakeMessage1)
+
+		inMock := NewMockStream(ctrl)
+		inMock.EXPECT().
+			Receive().
+			Return(fakeMessage1, nil)
+		inMock.EXPECT().
+			Receive().
+			Return(nil, io.EOF)
+
+		outMock := NewMockStream(ctrl)
+		outMock.EXPECT().Send(fakeMessage1).Return(nil)
+
+		fw := Pipe{
+			In:  inMock,
+			Out: outMock,
+		}
+		err := fw.Run()
+		require.NoError(t, err)
+	})
 	t.Run("With two messages", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -32,10 +58,14 @@ func TestPipe_HappyPath(t *testing.T) {
 			Return(fakeMessage1, nil)
 		inMock.EXPECT().
 			Receive().
+			Return(fakeMessage2, nil)
+		inMock.EXPECT().
+			Receive().
 			Return(nil, io.EOF)
 
 		outMock := NewMockStream(ctrl)
 		outMock.EXPECT().Send(fakeMessage1).Return(nil)
+		outMock.EXPECT().Send(fakeMessage2).Return(nil)
 
 		fw := Pipe{
 			In:  inMock,
