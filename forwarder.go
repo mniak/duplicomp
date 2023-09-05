@@ -129,27 +129,3 @@ func copyHeadersFromIncomingToOutcoming(in, out context.Context) context.Context
 	}
 	return in
 }
-
-type Forwarder2 struct {
-	InboundStream  Stream
-	OutboundStream Stream
-}
-
-func (fw *Forwarder2) Run() error {
-	var err error
-	for {
-		var msg proto.Message
-		msg, err = fw.InboundStream.Receive()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-		err = fw.OutboundStream.Send(msg)
-		if err != nil {
-			break
-		}
-	}
-	return err
-}
