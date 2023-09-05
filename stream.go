@@ -5,13 +5,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type Message struct {
-	internalMessage proto.Message
-}
-
 type Stream interface {
-	Send(m Message) error
-	Receive() (*Message, error)
+	Send(m proto.Message) error
+	Receive() (proto.Message, error)
 }
 
 type iProtoStream interface {
@@ -29,15 +25,13 @@ type protoStream struct {
 	stream iProtoStream
 }
 
-func (s *protoStream) Send(m Message) error {
-	err := s.stream.SendMsg(m.internalMessage)
+func (s *protoStream) Send(m proto.Message) error {
+	err := s.stream.SendMsg(m)
 	return err
 }
 
-func (s *protoStream) Receive() (*Message, error) {
-	msg := Message{
-		internalMessage: new(emptypb.Empty),
-	}
-	err := s.stream.RecvMsg(msg.internalMessage)
-	return &msg, err
+func (s *protoStream) Receive() (proto.Message, error) {
+	msg := new(emptypb.Empty)
+	err := s.stream.RecvMsg(&msg)
+	return msg, err
 }

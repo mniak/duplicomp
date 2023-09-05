@@ -7,8 +7,8 @@ package mocks
 import (
 	reflect "reflect"
 
-	duplicomp "github.com/mniak/duplicomp"
 	gomock "go.uber.org/mock/gomock"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // MockStream is a mock of Stream interface.
@@ -35,10 +35,10 @@ func (m *MockStream) EXPECT() *MockStreamMockRecorder {
 }
 
 // Receive mocks base method.
-func (m *MockStream) Receive() (*duplicomp.Message, error) {
+func (m *MockStream) Receive() (protoreflect.ProtoMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Receive")
-	ret0, _ := ret[0].(*duplicomp.Message)
+	ret0, _ := ret[0].(protoreflect.ProtoMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -50,7 +50,7 @@ func (mr *MockStreamMockRecorder) Receive() *gomock.Call {
 }
 
 // Send mocks base method.
-func (m *MockStream) Send(arg0 duplicomp.Message) error {
+func (m *MockStream) Send(arg0 protoreflect.ProtoMessage) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", arg0)
 	ret0, _ := ret[0].(error)

@@ -1,24 +1,19 @@
-package main
+package samples
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/cmd/sample/internal"
+	"github.com/mniak/duplicomp/internal/samples/internal"
 	"github.com/samber/lo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
-func main() {
-	var port int
-	flag.IntVar(&port, "port", internal.DefaultPort, "TCP port to connect")
-	flag.Parse()
-
+func RunSendPing(port int) error {
 	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUserAgent("sample-client/0.0.1"),
@@ -38,7 +33,8 @@ func main() {
 	})
 	if err != nil {
 		log.Printf("ERROR %s", err)
-		return
+		return err
 	}
 	log.Printf("PONG %s", resp)
+	return nil
 }

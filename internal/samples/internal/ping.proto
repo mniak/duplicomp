@@ -1,5 +1,3 @@
-option go_package = "github.com/mniak/duplicomp/sample/internal";
-
 service Pinger {
   rpc SendPing (Ping) returns (Pong) {}
 }

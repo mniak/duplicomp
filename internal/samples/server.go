@@ -1,26 +1,23 @@
-package main
+package samples
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/cmd/sample/internal"
-	"github.com/samber/lo"
+	"github.com/mniak/duplicomp/internal/samples/internal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
-func main() {
-	var port int
-	flag.IntVar(&port, "port", internal.DefaultPort, "TCP port to listen")
-	flag.Parse()
-
-	lis := lo.Must(net.Listen("tcp", fmt.Sprintf("localhost:%d", port)))
+func RunServer(port int) error {
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		return err
+	}
 	defer lis.Close()
 
 	pinger := Pinger{}
@@ -28,7 +25,7 @@ func main() {
 	log.Println("Server Started. Waiting for calls.")
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
-	lo.Must0(server.Serve(lis))
+	return server.Serve(lis)
 }
 
 type Pinger struct {

@@ -12,6 +12,7 @@ import (
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 type Forwarder struct {
@@ -70,7 +71,7 @@ func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 			err = item.E
 			break
 		}
-		msg := item.V.(Message)
+		msg := item.V.(proto.Message)
 		err = to.Send(msg)
 		if err != nil {
 			break
@@ -130,11 +131,25 @@ func copyHeadersFromIncomingToOutcoming(in, out context.Context) context.Context
 }
 
 type Forwarder2 struct {
-	InboundStream Stream
+	InboundStream  Stream
+	OutboundStream Stream
 }
 
 func (fw *Forwarder2) Run() error {
-	fw.InboundStream.Receive()
-	fw.InboundStream.Receive()
-	return nil
+	var err error
+	for {
+		var msg proto.Message
+		msg, err = fw.InboundStream.Receive()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+		err = fw.OutboundStream.Send(msg)
+		if err != nil {
+			break
+		}
+	}
+	return err
 }
