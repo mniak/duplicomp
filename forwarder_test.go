@@ -12,7 +12,7 @@ import (
 
 func TestForwarder2_HappyPath(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	// defer ctrl.Finish()
+	defer ctrl.Finish()
 
 	var fakeMessage1 proto.Message
 	gofakeit.Struct(&fakeMessage1)
