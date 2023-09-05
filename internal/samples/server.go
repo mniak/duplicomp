@@ -14,15 +14,16 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RunServer(port int, opts ..._Option) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+func RunServer(opts ..._Option) error {
+	options := *defaultOptions().apply(opts...)
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", options.Port))
 	if err != nil {
 		return err
 	}
 	defer lis.Close()
 
 	pinger := _PingerServer{
-		options: buildOptions(opts...),
+		options: options,
 	}
 
 	log.Println("Server Started. Waiting for calls.")

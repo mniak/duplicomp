@@ -12,11 +12,11 @@ func TestClientConnectingToServer(t *testing.T) {
 	fakePort := gofakeit.IntRange(60000, 65535)
 
 	go func() {
-		RunServer(fakePort)
+		RunServer(WithPort(fakePort))
 	}()
 
 	time.Sleep(50 * time.Millisecond)
 
-	err := RunSendPing(fakePort)
+	err := RunSendPing(WithPort(fakePort))
 	require.NoError(t, err)
 }

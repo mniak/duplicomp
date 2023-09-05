@@ -12,5 +12,5 @@ func main() {
 	flag.IntVar(&port, "port", 9000, "TCP port to listen")
 	flag.Parse()
 
-	lo.Must0(samples.RunServer(port))
+	lo.Must0(samples.RunServer(samples.WithPort(port)))
 }

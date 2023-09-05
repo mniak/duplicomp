@@ -12,5 +12,5 @@ func main() {
 	flag.IntVar(&port, "port", 9000, "TCP port to connect")
 	flag.Parse()
 
-	lo.Must0(samples.RunSendPing(port))
+	lo.Must0(samples.RunSendPing(samples.WithPort(port)))
 }

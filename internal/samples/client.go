@@ -13,8 +13,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RunSendPing(port int) error {
-	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", port),
+func RunSendPing(opts ..._Option) error {
+	options := *defaultOptions().apply(opts...)
+	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", options.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUserAgent("sample-client/0.0.1"),
 	))
