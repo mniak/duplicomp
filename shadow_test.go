@@ -58,7 +58,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 
-	t.Run("When primary fails, must not call shadow", func(t *testing.T) {
+	t.Run("When primary fails, dont call shadow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -189,7 +189,7 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 
-	t.Run("When primary receive fails, must not call shadow", func(t *testing.T) {
+	t.Run("When primary receive fails, dont call shadow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
