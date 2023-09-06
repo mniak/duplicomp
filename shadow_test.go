@@ -58,7 +58,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 
-	t.Run("When primary fails, should not call shadow", func(t *testing.T) {
+	t.Run("When primary fails, must not call shadow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -148,6 +148,7 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		gofakeit.Struct(fakeShadowMessage)
 		require.NotNil(t, fakeShadowMessage)
 		require.NotEmpty(t, fakeShadowMessage)
+		fakeShadowError := errors.New(gofakeit.SentenceSimple())
 
 		require.NotEqual(t, fakeMessage, fakeShadowMessage)
 		require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
@@ -162,8 +163,8 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		mockShadow.EXPECT().Receive().Do(func() {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
-		}).Return(fakeShadowMessage, nil)
-		mockLogger.EXPECT().LogCompareReceive(fakeMessage, fakeShadowMessage, nil)
+		}).Return(fakeShadowMessage, fakeShadowError)
+		mockLogger.EXPECT().LogCompareReceive(fakeMessage, fakeShadowMessage, fakeShadowError)
 
 		sut := StreamWithShadow{
 			inner:  mockStream,
@@ -187,4 +188,43 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		// Wait for remaining calls in other goroutines
 		time.Sleep(100 * time.Millisecond)
 	})
+
+	// t.Run("When primary receive fails, must not call shadow", func(t *testing.T) {
+	// 	ctrl := gomock.NewController(t)
+	// 	defer ctrl.Finish()
+
+	// 	fakeMessage := new(pbany.Any)
+	// 	gofakeit.Struct(fakeMessage)
+	// 	require.NotNil(t, fakeMessage)
+	// 	require.NotEmpty(t, fakeMessage)
+	// 	fakeError := errors.New(gofakeit.SentenceSimple())
+
+	// 	fakeShadowMessage := new(pbany.Any)
+	// 	gofakeit.Struct(fakeShadowMessage)
+	// 	require.NotNil(t, fakeShadowMessage)
+	// 	require.NotEmpty(t, fakeShadowMessage)
+
+	// 	require.NotEqual(t, fakeMessage, fakeShadowMessage)
+	// 	require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
+
+	// 	mockStream := NewMockStream(ctrl)
+	// 	mockShadow := NewMockStream(ctrl)
+	// 	mockLogger := NewMockShadowLogger(ctrl)
+
+	// 	mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
+
+	// 	sut := StreamWithShadow{
+	// 		inner:  mockStream,
+	// 		shadow: mockShadow,
+	// 		logger: mockLogger,
+	// 	}
+
+	// 	msg, err := sut.Receive()
+
+	// 	require.ErrorIs(t, err, fakeError)
+	// 	assert.Equal(t, fakeMessage, msg)
+
+	// 	// Wait for remaining calls in other goroutines
+	// 	time.Sleep(100 * time.Millisecond)
+	// })
 }
