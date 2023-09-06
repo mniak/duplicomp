@@ -16,26 +16,6 @@ type StreamWithShadow struct {
 }
 
 func (fs *StreamWithShadow) Send(m proto.Message) error {
-	// var wg sync.WaitGroup
-	// wg.Add(2)
-
-	// var err error
-	// go func() {
-	// 	err = fs.innerStream.Send(m)
-	// 	wg.Done()
-	// }()
-
-	// var shadowError error
-	// go func() {
-	// 	shadowError = fs.shadow.Send(m)
-	// 	wg.Done()
-	// }()
-	// _ = shadowError
-	// wg.Wait()
-	// if shadowError != nil {
-	// 	fs.shadowLogger.LogSendError(shadowError)
-	// }
-
 	err := fs.inner.Send(m)
 	if err != nil {
 		return err
