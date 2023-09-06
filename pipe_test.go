@@ -1,6 +1,7 @@
 package duplicomp
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func TestPipe_HappyPath(t *testing.T) {
-	t.Run("With one messages", func(t *testing.T) {
+	t.Run("With no messages", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -29,7 +30,7 @@ func TestPipe_HappyPath(t *testing.T) {
 		err := fw.Run()
 		require.NoError(t, err)
 	})
-	t.Run("With one messages", func(t *testing.T) {
+	t.Run("With one message", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -91,5 +92,28 @@ func TestPipe_HappyPath(t *testing.T) {
 		}
 		err := fw.Run()
 		require.NoError(t, err)
+	})
+}
+
+func TestPipe_Failures(t *testing.T) {
+	t.Run("When first receive returns error, should return it", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fakeError := errors.New(gofakeit.SentenceSimple())
+
+		inMock := NewMockStream(ctrl)
+		inMock.EXPECT().
+			Receive().
+			Return(nil, fakeError)
+
+		outMock := NewMockStream(ctrl)
+
+		fw := Pipe{
+			In:  inMock,
+			Out: outMock,
+		}
+		err := fw.Run()
+		require.Equal(t, fakeError, err)
 	})
 }
