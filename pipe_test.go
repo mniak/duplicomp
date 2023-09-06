@@ -35,8 +35,9 @@ func TestPipe_HappyPath(t *testing.T) {
 		defer ctrl.Finish()
 
 		fakeMessage := new(any.Any)
-		gofakeit.Struct(*fakeMessage)
+		gofakeit.Struct(fakeMessage)
 		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
 
 		inMock := NewMockStream(ctrl)
 		inMock.EXPECT().
@@ -61,12 +62,14 @@ func TestPipe_HappyPath(t *testing.T) {
 		defer ctrl.Finish()
 
 		fakeMessage1 := new(any.Any)
-		gofakeit.Struct(*fakeMessage1)
+		gofakeit.Struct(fakeMessage1)
 		require.NotNil(t, fakeMessage1)
+		require.NotEmpty(t, fakeMessage1)
 
 		fakeMessage2 := new(any.Any)
-		gofakeit.Struct(&fakeMessage2)
+		gofakeit.Struct(fakeMessage2)
 		require.NotNil(t, fakeMessage2)
+		require.NotEmpty(t, fakeMessage2)
 
 		require.NotEqual(t, fakeMessage1, fakeMessage2)
 		require.NotEqual(t, &fakeMessage1, &fakeMessage2)
@@ -108,6 +111,36 @@ func TestPipe_Failures(t *testing.T) {
 			Return(nil, fakeError)
 
 		outMock := NewMockStream(ctrl)
+
+		fw := Pipe{
+			In:  inMock,
+			Out: outMock,
+		}
+		err := fw.Run()
+		require.Equal(t, fakeError, err)
+	})
+
+	t.Run("When has a good message and then a failure", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fakeError := errors.New(gofakeit.SentenceSimple())
+
+		fakeMessage := new(any.Any)
+		gofakeit.Struct(fakeMessage)
+		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
+
+		inMock := NewMockStream(ctrl)
+		inMock.EXPECT().
+			Receive().
+			Return(fakeMessage, nil)
+		inMock.EXPECT().
+			Receive().
+			Return(nil, fakeError)
+
+		outMock := NewMockStream(ctrl)
+		outMock.EXPECT().Send(fakeMessage).Return(nil)
 
 		fw := Pipe{
 			In:  inMock,
