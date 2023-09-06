@@ -189,42 +189,42 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 
-	// t.Run("When primary receive fails, must not call shadow", func(t *testing.T) {
-	// 	ctrl := gomock.NewController(t)
-	// 	defer ctrl.Finish()
+	t.Run("When primary receive fails, must not call shadow", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 
-	// 	fakeMessage := new(pbany.Any)
-	// 	gofakeit.Struct(fakeMessage)
-	// 	require.NotNil(t, fakeMessage)
-	// 	require.NotEmpty(t, fakeMessage)
-	// 	fakeError := errors.New(gofakeit.SentenceSimple())
+		fakeMessage := new(pbany.Any)
+		gofakeit.Struct(fakeMessage)
+		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
+		fakeError := errors.New(gofakeit.SentenceSimple())
 
-	// 	fakeShadowMessage := new(pbany.Any)
-	// 	gofakeit.Struct(fakeShadowMessage)
-	// 	require.NotNil(t, fakeShadowMessage)
-	// 	require.NotEmpty(t, fakeShadowMessage)
+		fakeShadowMessage := new(pbany.Any)
+		gofakeit.Struct(fakeShadowMessage)
+		require.NotNil(t, fakeShadowMessage)
+		require.NotEmpty(t, fakeShadowMessage)
 
-	// 	require.NotEqual(t, fakeMessage, fakeShadowMessage)
-	// 	require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
+		require.NotEqual(t, fakeMessage, fakeShadowMessage)
+		require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
 
-	// 	mockStream := NewMockStream(ctrl)
-	// 	mockShadow := NewMockStream(ctrl)
-	// 	mockLogger := NewMockShadowLogger(ctrl)
+		mockStream := NewMockStream(ctrl)
+		mockShadow := NewMockStream(ctrl)
+		mockLogger := NewMockShadowLogger(ctrl)
 
-	// 	mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
+		mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
 
-	// 	sut := StreamWithShadow{
-	// 		inner:  mockStream,
-	// 		shadow: mockShadow,
-	// 		logger: mockLogger,
-	// 	}
+		sut := StreamWithShadow{
+			inner:  mockStream,
+			shadow: mockShadow,
+			logger: mockLogger,
+		}
 
-	// 	msg, err := sut.Receive()
+		msg, err := sut.Receive()
 
-	// 	require.ErrorIs(t, err, fakeError)
-	// 	assert.Equal(t, fakeMessage, msg)
+		require.ErrorIs(t, err, fakeError)
+		assert.Equal(t, fakeMessage, msg)
 
-	// 	// Wait for remaining calls in other goroutines
-	// 	time.Sleep(100 * time.Millisecond)
-	// })
+		// Wait for remaining calls in other goroutines
+		time.Sleep(100 * time.Millisecond)
+	})
 }
