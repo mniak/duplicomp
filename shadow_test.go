@@ -1,6 +1,7 @@
 package duplicomp
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -12,10 +13,10 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-var _ Stream = &ShadowStream{}
+var _ Stream = &StreamWithShadow{}
 
-func TestShadowLogger_Send(t *testing.T) {
-	t.Run("Should send both concurrently and return even after secondary sends", func(t *testing.T) {
+func TestStreamWithShadow_Send(t *testing.T) {
+	t.Run("Happy Path", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -24,22 +25,22 @@ func TestShadowLogger_Send(t *testing.T) {
 		require.NotNil(t, fakeMessage)
 		require.NotEmpty(t, fakeMessage)
 
-		mockPrimaryStream := NewMockStream(ctrl)
-		mockShadowStream := NewMockStream(ctrl)
-		mockShadowLogger := NewMockShadowLogger(ctrl)
+		mockStream := NewMockStream(ctrl)
+		mockShadow := NewMockStream(ctrl)
+		mockLogger := NewMockShadowLogger(ctrl)
 
 		var wg sync.WaitGroup
-		mockPrimaryStream.EXPECT().Send(fakeMessage).Return(nil)
+		mockStream.EXPECT().Send(fakeMessage).Return(nil)
 		wg.Add(1)
-		mockShadowStream.EXPECT().Send(fakeMessage).Do(func(_ any) {
+		mockShadow.EXPECT().Send(fakeMessage).Do(func(_ any) {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
 		}).Return(nil)
 
-		sut := ShadowStream{
-			primaryStream: mockPrimaryStream,
-			shadowStream:  mockShadowStream,
-			shadowLogger:  mockShadowLogger,
+		sut := StreamWithShadow{
+			inner:  mockStream,
+			shadow: mockShadow,
+			logger: mockLogger,
 		}
 
 		startTime := time.Now()
@@ -53,32 +54,69 @@ func TestShadowLogger_Send(t *testing.T) {
 		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
 		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
 	})
+	t.Run("When primary fails, should not call shadow", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 
-	// t.Run("When shadow fails", func(t *testing.T) {
-	// 	ctrl := gomock.NewController(t)
-	// 	defer ctrl.Finish()
+		fakeError := errors.New(gofakeit.SentenceSimple())
 
-	// 	mockPrimaryStream := NewMockStream(ctrl)
-	// 	mockShadowStream := NewMockStream(ctrl)
-	// 	mockShadowLogger := NewMockShadowLogger(ctrl)
+		fakeMessage := new(pbany.Any)
+		gofakeit.Struct(fakeMessage)
+		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
 
-	// 	fakePrimaryError := errors.New(gofakeit.SentenceSimple())
-	// 	fakeShadowError := errors.New(gofakeit.SentenceSimple())
+		mockStream := NewMockStream(ctrl)
+		mockShadow := NewMockStream(ctrl)
+		mockLogger := NewMockShadowLogger(ctrl)
 
-	// 	mockShadowLogger.recorder.LogSendError(fakeShadowError)
+		mockStream.EXPECT().Send(fakeMessage).Return(fakeError)
 
-	// 	fakeMessage := new(pbany.Any)
-	// 	gofakeit.Struct(fakeMessage)
-	// 	require.NotNil(t, fakeMessage)
-	// 	require.NotEmpty(t, fakeMessage)
+		sut := StreamWithShadow{
+			inner:  mockStream,
+			shadow: mockShadow,
+			logger: mockLogger,
+		}
 
-	// 	sut := ShadowStream{
-	// 		primaryStream: mockPrimaryStream,
-	// 		shadowStream:  mockShadowStream,
-	// 		shadowLogger:  mockShadowLogger,
-	// 	}
+		err := sut.Send(fakeMessage)
 
-	// 	resultError := sut.Send(fakeMessage)
-	// 	assert.Equal(t, fakePrimaryError, resultError)
-	// })
+		require.ErrorIs(t, err, fakeError)
+	})
+	t.Run("When shadow fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fakeMessage := new(pbany.Any)
+		gofakeit.Struct(fakeMessage)
+		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
+
+		mockStream := NewMockStream(ctrl)
+		mockShadow := NewMockStream(ctrl)
+		mockLogger := NewMockShadowLogger(ctrl)
+
+		var wg sync.WaitGroup
+		mockStream.EXPECT().Send(fakeMessage).Return(nil)
+		wg.Add(1)
+		mockShadow.EXPECT().Send(fakeMessage).Do(func(_ any) {
+			time.Sleep(50 * time.Millisecond)
+			wg.Done()
+		}).Return(nil)
+
+		sut := StreamWithShadow{
+			inner:  mockStream,
+			shadow: mockShadow,
+			logger: mockLogger,
+		}
+
+		startTime := time.Now()
+		err := sut.Send(fakeMessage)
+		elapsed1 := time.Now().Sub(startTime)
+
+		wg.Wait()
+		elapsed2 := time.Now().Sub(startTime)
+
+		require.NoError(t, err)
+		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
+		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
+	})
 }

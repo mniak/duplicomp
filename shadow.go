@@ -5,29 +5,29 @@ import (
 )
 
 //go:generate mockgen -package=duplicomp -destination=mock_shadowlogger_test.go . ShadowLogger
-type ShadowLogger interface {
-	LogSendError(error)
+type ComparisonLogger interface {
+	LogComparison(error)
 }
 
-type ShadowStream struct {
-	primaryStream Stream
-	shadowStream  Stream
-	shadowLogger  ShadowLogger
+type StreamWithShadow struct {
+	inner  Stream
+	shadow Stream
+	logger ComparisonLogger
 }
 
-func (fs *ShadowStream) Send(m proto.Message) error {
+func (fs *StreamWithShadow) Send(m proto.Message) error {
 	// var wg sync.WaitGroup
 	// wg.Add(2)
 
 	// var err error
 	// go func() {
-	// 	err = fs.primaryStream.Send(m)
+	// 	err = fs.innerStream.Send(m)
 	// 	wg.Done()
 	// }()
 
 	// var shadowError error
 	// go func() {
-	// 	shadowError = fs.shadowStream.Send(m)
+	// 	shadowError = fs.shadow.Send(m)
 	// 	wg.Done()
 	// }()
 	// _ = shadowError
@@ -36,13 +36,13 @@ func (fs *ShadowStream) Send(m proto.Message) error {
 	// 	fs.shadowLogger.LogSendError(shadowError)
 	// }
 
-	err := fs.primaryStream.Send(m)
+	err := fs.inner.Send(m)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		err = fs.shadowStream.Send(m)
+		err = fs.shadow.Send(m)
 		// if err != nil {
 		// 	return err
 		// }
@@ -51,6 +51,6 @@ func (fs *ShadowStream) Send(m proto.Message) error {
 	return err
 }
 
-func (fs *ShadowStream) Receive() (proto.Message, error) {
+func (fs *StreamWithShadow) Receive() (proto.Message, error) {
 	return nil, nil
 }
