@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // MockShadowLogger is a mock of ShadowLogger interface.
@@ -31,6 +32,18 @@ func NewMockShadowLogger(ctrl *gomock.Controller) *MockShadowLogger {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockShadowLogger) EXPECT() *MockShadowLoggerMockRecorder {
 	return m.recorder
+}
+
+// LogCompareReceive mocks base method.
+func (m *MockShadowLogger) LogCompareReceive(arg0, arg1 protoreflect.ProtoMessage, arg2 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogCompareReceive", arg0, arg1, arg2)
+}
+
+// LogCompareReceive indicates an expected call of LogCompareReceive.
+func (mr *MockShadowLoggerMockRecorder) LogCompareReceive(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogCompareReceive", reflect.TypeOf((*MockShadowLogger)(nil).LogCompareReceive), arg0, arg1, arg2)
 }
 
 // LogSendFailure mocks base method.

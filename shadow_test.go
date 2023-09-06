@@ -53,6 +53,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		require.NoError(t, err)
 		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
 		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
+
+		// Wait for remaining calls in other goroutines
+		time.Sleep(100 * time.Millisecond)
 	})
 
 	t.Run("When primary fails, should not call shadow", func(t *testing.T) {
@@ -80,6 +83,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 
 		err := sut.Send(fakeMessage)
 		require.ErrorIs(t, err, fakeError)
+
+		// Wait for remaining calls in other goroutines
+		time.Sleep(100 * time.Millisecond)
 	})
 
 	t.Run("When shadow fails must log", func(t *testing.T) {
@@ -122,6 +128,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		require.NoError(t, err)
 		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
 		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
+
+		// Wait for remaining calls in other goroutines
+		time.Sleep(100 * time.Millisecond)
 	})
 }
 
@@ -135,11 +144,26 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		require.NotNil(t, fakeMessage)
 		require.NotEmpty(t, fakeMessage)
 
+		fakeShadowMessage := new(pbany.Any)
+		gofakeit.Struct(fakeShadowMessage)
+		require.NotNil(t, fakeShadowMessage)
+		require.NotEmpty(t, fakeShadowMessage)
+
+		require.NotEqual(t, fakeMessage, fakeShadowMessage)
+		require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
+
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
 		mockLogger := NewMockShadowLogger(ctrl)
 
+		var wg sync.WaitGroup
+		wg.Add(1)
 		mockStream.EXPECT().Receive().Return(fakeMessage, nil)
+		mockShadow.EXPECT().Receive().Do(func() {
+			time.Sleep(50 * time.Millisecond)
+			wg.Done()
+		}).Return(fakeShadowMessage, nil)
+		mockLogger.EXPECT().LogCompareReceive(fakeMessage, fakeShadowMessage, nil)
 
 		sut := StreamWithShadow{
 			inner:  mockStream,
@@ -147,8 +171,20 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 			logger: mockLogger,
 		}
 
+		startTime := time.Now()
 		msg, err := sut.Receive()
+		elapsed1 := time.Now().Sub(startTime)
+
+		wg.Wait()
+		elapsed2 := time.Now().Sub(startTime)
+
 		require.NoError(t, err)
 		assert.Equal(t, fakeMessage, msg)
+
+		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
+		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
+
+		// Wait for remaining calls in other goroutines
+		time.Sleep(100 * time.Millisecond)
 	})
 }
