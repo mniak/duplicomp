@@ -32,5 +32,5 @@ func (fs *StreamWithShadow) Send(m proto.Message) error {
 }
 
 func (fs *StreamWithShadow) Receive() (proto.Message, error) {
-	return nil, nil
+	return fs.inner.Receive()
 }

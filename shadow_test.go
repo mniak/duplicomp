@@ -79,11 +79,10 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		}
 
 		err := sut.Send(fakeMessage)
-
 		require.ErrorIs(t, err, fakeError)
 	})
 
-	t.Run("When shadow fails", func(t *testing.T) {
+	t.Run("When shadow fails must log", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -123,5 +122,33 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		require.NoError(t, err)
 		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
 		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
+	})
+}
+
+func TestStreamWithShadow_Receive(t *testing.T) {
+	t.Run("Happy path", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fakeMessage := new(pbany.Any)
+		gofakeit.Struct(fakeMessage)
+		require.NotNil(t, fakeMessage)
+		require.NotEmpty(t, fakeMessage)
+
+		mockStream := NewMockStream(ctrl)
+		mockShadow := NewMockStream(ctrl)
+		mockLogger := NewMockShadowLogger(ctrl)
+
+		mockStream.EXPECT().Receive().Return(fakeMessage, nil)
+
+		sut := StreamWithShadow{
+			inner:  mockStream,
+			shadow: mockShadow,
+			logger: mockLogger,
+		}
+
+		msg, err := sut.Receive()
+		require.NoError(t, err)
+		assert.Equal(t, fakeMessage, msg)
 	})
 }
