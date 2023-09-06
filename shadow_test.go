@@ -54,6 +54,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		assert.InDelta(t, 0, elapsed1.Milliseconds(), 5)
 		assert.InDelta(t, 50, elapsed2.Milliseconds(), 5)
 	})
+
 	t.Run("When primary fails, should not call shadow", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -81,9 +82,12 @@ func TestStreamWithShadow_Send(t *testing.T) {
 
 		require.ErrorIs(t, err, fakeError)
 	})
+
 	t.Run("When shadow fails", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
+
+		fakeError := errors.New(gofakeit.SentenceSimple())
 
 		fakeMessage := new(pbany.Any)
 		gofakeit.Struct(fakeMessage)
@@ -100,7 +104,8 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		mockShadow.EXPECT().Send(fakeMessage).Do(func(_ any) {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
-		}).Return(nil)
+		}).Return(fakeError)
+		mockLogger.EXPECT().LogSendFailure(fakeError)
 
 		sut := StreamWithShadow{
 			inner:  mockStream,

@@ -33,14 +33,14 @@ func (m *MockShadowLogger) EXPECT() *MockShadowLoggerMockRecorder {
 	return m.recorder
 }
 
-// LogComparison mocks base method.
-func (m *MockShadowLogger) LogComparison(arg0 error) {
+// LogSendFailure mocks base method.
+func (m *MockShadowLogger) LogSendFailure(arg0 error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "LogSendError", arg0)
+	m.ctrl.Call(m, "LogSendFailure", arg0)
 }
 
-// LogSendError indicates an expected call of LogSendError.
-func (mr *MockShadowLoggerMockRecorder) LogSendError(arg0 interface{}) *gomock.Call {
+// LogSendFailure indicates an expected call of LogSendFailure.
+func (mr *MockShadowLoggerMockRecorder) LogSendFailure(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogSendError", reflect.TypeOf((*MockShadowLogger)(nil).LogComparison), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogSendFailure", reflect.TypeOf((*MockShadowLogger)(nil).LogSendFailure), arg0)
 }

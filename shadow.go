@@ -5,14 +5,14 @@ import (
 )
 
 //go:generate mockgen -package=duplicomp -destination=mock_shadowlogger_test.go . ShadowLogger
-type ComparisonLogger interface {
-	LogComparison(error)
+type ShadowLogger interface {
+	LogSendFailure(error)
 }
 
 type StreamWithShadow struct {
 	inner  Stream
 	shadow Stream
-	logger ComparisonLogger
+	logger ShadowLogger
 }
 
 func (fs *StreamWithShadow) Send(m proto.Message) error {
@@ -42,13 +42,13 @@ func (fs *StreamWithShadow) Send(m proto.Message) error {
 	}
 
 	go func() {
-		err = fs.shadow.Send(m)
-		// if err != nil {
-		// 	return err
-		// }
+		err := fs.shadow.Send(m)
+		if err != nil {
+			fs.logger.LogSendFailure(err)
+		}
 	}()
 
-	return err
+	return nil
 }
 
 func (fs *StreamWithShadow) Receive() (proto.Message, error) {
