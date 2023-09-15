@@ -39,14 +39,16 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := f.forward(ctx, f.Downstream, f.Upstream)
+		obs := ObservableFromStream(ctx, f.Downstream)
+		err := f.forwardMessages(obs, f.Upstream)
 		errorChan <- err
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := f.forward(ctx, f.Upstream, f.Downstream)
+		obs := ObservableFromStream(ctx, f.Upstream)
+		err := f.forwardMessages(obs, f.Downstream)
 		errorChan <- err
 	}()
 
@@ -54,20 +56,7 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 	return combinedErrors
 }
 
-func (f *Forwarder) forward(ctx context.Context, from InputStream, to OutputStream) error {
-	for {
-		msg, err := from.Receive()
-		if err != nil {
-			return err
-		}
-		err = to.Send(msg)
-		if err != nil {
-			return err
-		}
-	}
-}
-
-func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
+func (f *Forwarder) forwardMessages(from rxgo.Observable, to OutputStream) error {
 	var err error
 	for item := range from.Observe() {
 		if item.Error() {
@@ -82,13 +71,7 @@ func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 	return nil
 }
 
-func ObservableFromProtoStream(ctx context.Context, protoStream iProtoStream) rxgo.Observable {
-	stream := InOutStream(StreamFromProtobuf(protoStream))
-	obs := ObservableFromStream(ctx, stream)
-	return obs
-}
-
-func ObservableFromStream(ctx context.Context, stream Stream) rxgo.Observable {
+func ObservableFromStream(ctx context.Context, stream InputStream) rxgo.Observable {
 	defer func() {
 		data := recover()
 		if data != nil {
