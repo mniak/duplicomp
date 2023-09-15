@@ -31,22 +31,18 @@ func TestComplete(t *testing.T) {
 	mainLogger := log2.Sub(rootLogger, "TEST ")
 
 	fakePingMessage := gofakeit.SentenceSimple()
-	fakePrimaryReply := gofakeit.SentenceSimple()
 
+	// ------- Primary server --------
+
+	var fakePrimaryPong grpc.Pong
+	gofakeit.Struct(&fakePrimaryPong)
 	mockPrimaryHandler := NewMockServerHandler(ctrl)
 	mockPrimaryHandler.EXPECT().
 		Handle(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
 			require.Equal(t, fakePingMessage, *ping.Message)
-			return &grpc.Pong{
-				Reply:    ptr(fakePrimaryReply),
-				ServedBy: ptr("primary"),
-			}, nil
+			return &fakePrimaryPong, nil
 		})
-
-	mockShadowHandler := NewMockServerHandler(ctrl)
-
-	// Primary server
 	primary, err := samples.RunServer(
 		samples.WithLogger(log2.Sub(rootLogger, "PRIM ")),
 		samples.WithPort(PRIMARY_PORT),
@@ -55,7 +51,17 @@ func TestComplete(t *testing.T) {
 	require.NoError(t, err)
 	defer primary.Stop()
 
-	// Shadow server
+	// ------- Shadow server --------
+
+	var fakeShadowPong grpc.Pong
+	gofakeit.Struct(&fakeShadowPong)
+	mockShadowHandler := NewMockServerHandler(ctrl)
+	mockShadowHandler.EXPECT().
+		Handle(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
+			require.Equal(t, fakePingMessage, *ping.Message)
+			return &fakeShadowPong, nil
+		}).Times(0)
 	secondary, err := samples.RunServer(
 		samples.WithLogger(log2.Sub(rootLogger, "SHAD ")),
 		samples.WithPort(SHADOW_PORT),
@@ -83,8 +89,8 @@ func TestComplete(t *testing.T) {
 		samples.WithPort(PRIMARY_PORT),
 	)
 	require.NoError(t, err)
-	require.Equal(t, fakePrimaryReply, *pong.Reply)
-	require.Equal(t, "primary", *pong.ServedBy)
+	require.Equal(t, fakePrimaryPong.Reply, pong.Reply)
+	require.Equal(t, fakePrimaryPong.ServedBy, pong.ServedBy)
 }
 
 func ptr[T any](t T) *T {
