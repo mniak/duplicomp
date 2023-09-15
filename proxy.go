@@ -2,9 +2,11 @@ package duplicomp
 
 import (
 	"context"
+	"io"
 	"log"
 	"net"
 
+	"github.com/mniak/duplicomp/internal/noop"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -33,6 +35,7 @@ type Proxy interface {
 
 type GRPCProxy struct {
 	config ProxyConfig
+	logger *log.Logger
 
 	listener    net.Listener
 	connections []*grpc.ClientConn
@@ -41,11 +44,21 @@ type GRPCProxy struct {
 	server      *grpc.Server
 }
 
-func NewGRPCProxy(config ProxyConfig) Proxy {
+func NewGRPCProxy(config ProxyConfig) *GRPCProxy {
 	return &GRPCProxy{
 		config:  config,
 		stopped: make(chan struct{}),
+		logger:  noop.Logger(),
 	}
+}
+
+func (p *GRPCProxy) LoggingTo(w io.Writer) *GRPCProxy {
+	return p.LoggingToWithPrefix(w, "[Proxy] ")
+}
+
+func (p *GRPCProxy) LoggingToWithPrefix(w io.Writer, prefix string) *GRPCProxy {
+	p.logger = log.New(w, prefix, 0)
+	return p
 }
 
 func (p *GRPCProxy) run() error {
@@ -71,8 +84,8 @@ func (p *GRPCProxy) connectionHandler(_ any, protoServer grpc.ServerStream) erro
 	if !hasName {
 		return status.Errorf(codes.NotFound, "Method name could not be determined")
 	}
-	log.Printf("Handling method %s", method)
-	defer log.Printf("Done handling method %s", method)
+	p.logger.Printf("Handling method %s", method)
+	defer p.logger.Printf("Done handling method %s", method)
 
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
