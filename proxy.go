@@ -61,6 +61,11 @@ func (p *GRPCProxy) LoggingToWithPrefix(w io.Writer, prefix string) *GRPCProxy {
 	return p
 }
 
+func (p *GRPCProxy) WithLogger(logger *log.Logger) *GRPCProxy {
+	p.logger = logger
+	return p
+}
+
 func (p *GRPCProxy) run() error {
 	p.server = grpc.NewServer(grpc.UnknownServiceHandler(p.connectionHandler))
 	p.server.RegisterService(&grpc.ServiceDesc{

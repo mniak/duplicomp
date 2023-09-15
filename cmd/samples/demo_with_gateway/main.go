@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/mniak/duplicomp/internal/gateway"
 	"github.com/mniak/duplicomp/internal/samples"
 	"github.com/samber/lo"
 )
 
 func main() {
-	// ctx, stop := context.WithCancel(context.Background())
-	// defer stop()
+	ctx, stop := context.WithCancel(context.Background())
+	defer stop()
 
 	logger := log.New(os.Stdout, "[Main] ", 0)
 
@@ -21,28 +24,36 @@ func main() {
 
 	// Primary server
 	logger.Println("Starting primary server")
-	primary := lo.Must(samples.RunServer(samples.WithPort(PRIMARY_PORT)))
-	time.Sleep(3 * time.Second)
+	primary := lo.Must(samples.RunServer(
+		samples.WithName("Primary"),
+		samples.WithPort(PRIMARY_PORT),
+	))
 	defer primary.Stop()
 
-	// // Shadow server
-	// logger.Println("Starting shadow server")
-	// secondary := lo.Must(samples.RunServer(samples.WithPort(SHADOW_PORT)))
-	// time.Sleep(3 * time.Second)
-	// defer secondary.Stop()
+	// Shadow server
+	logger.Println("Starting shadow server")
+	secondary := lo.Must(samples.RunServer(
+		samples.WithName("Shadow"),
+		samples.WithPort(SHADOW_PORT),
+	))
+	defer secondary.Stop()
 
-	// // Gateway
-	// go func() {
-	// 	logger.Println("Starting gateway")
-	// 	gateway.RunGateway(ctx, gateway.ProxyParams{
-	// 		ListenPort:    GATEWAY_PORT,
-	// 		PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
-	// 		ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
-	// 	})
-	// }()
-	// time.Sleep(3 * time.Second)
+	// Gateway
+	time.Sleep(3 * time.Second)
+	go func() {
+		logger.Println("Starting gateway")
+		gateway.RunGateway(ctx, gateway.ProxyParams{
+			ListenPort:    GATEWAY_PORT,
+			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
+			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
+		})
+	}()
 
-	// // Client
+	// Client
+	time.Sleep(3 * time.Second)
 	logger.Println("Sending PING")
-	lo.Must0(samples.RunSendPing(samples.WithPort(PRIMARY_PORT)))
+	lo.Must0(samples.RunSendPing(
+		samples.WithName("Client"),
+		samples.WithPort(PRIMARY_PORT),
+	))
 }

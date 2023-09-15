@@ -3,8 +3,6 @@ package samples
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/samples/internal"
@@ -15,9 +13,8 @@ import (
 )
 
 func RunSendPing(opts ..._Option) error {
-	logger := log.New(os.Stdout, "[Client] ", 0)
-	options := *defaultOptions().apply(opts...)
-	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", options.Port),
+	o := defaultOptions().apply(opts...)
+	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", o.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUserAgent("sample-client/0.0.1"),
 	))
@@ -30,14 +27,14 @@ func RunSendPing(opts ..._Option) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), meta)
 
 	phrase := gofakeit.SentenceSimple()
-	logger.Printf("PING %s", phrase)
+	o.Logger.Printf("PING %s", phrase)
 	resp, err := client.SendPing(ctx, &internal.Ping{
 		Message: &phrase,
 	})
 	if err != nil {
-		logger.Print("ERROR %s", err)
+		o.Logger.Print("ERROR %s", err)
 		return err
 	}
-	logger.Printf("PONG %s", resp)
+	o.Logger.Printf("PONG %s", resp)
 	return nil
 }

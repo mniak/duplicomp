@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -15,13 +14,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var defaultServerLogger = log.New(os.Stdout, "[Server] ", 0)
-
 func RunServer(opts ..._Option) (stop Stoppable, err error) {
-	logger := defaultServerLogger
-
-	options := *defaultOptions().apply(opts...)
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", options.Port))
+	o := *defaultOptions().apply(opts...)
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", o.Port))
 	if err != nil {
 		return nil, err
 	}
@@ -32,10 +27,10 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 	}()
 
 	pinger := _PingerServer{
-		options: options,
+		options: o,
 	}
 
-	logger.Println("Server Started. Waiting for calls.")
+	o.Logger.Println("Server Started. Waiting for calls.")
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
 
@@ -43,10 +38,10 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 		server.Serve(lis)
 	}()
 	return stoppable(func() {
-		logger.Println("Stopping gRPC server")
+		o.Logger.Println("Stopping gRPC server")
 		server.GracefulStop()
 		lis.Close()
-		logger.Println("Listener stopped")
+		o.Logger.Println("Listener stopped")
 	}), nil
 }
 
@@ -59,20 +54,23 @@ func ptr[T any](t T) *T {
 	return &t
 }
 
-func defaultServerHandler(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
-	meta, hasMeta := metadata.FromIncomingContext(ctx)
-	defaultServerLogger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
+func defaultServerHandler(logger *log.Logger) _ServerHandler {
+	return func(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
+		meta, hasMeta := metadata.FromIncomingContext(ctx)
+		logger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
 
-	return &internal.Pong{
-		OriginalMessage:    ping.Message,
-		CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
-		RandomNumber:       ptr(gofakeit.Int32()),
-	}, nil
+		return &internal.Pong{
+			OriginalMessage:    ping.Message,
+			CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
+			RandomNumber:       ptr(gofakeit.Int32()),
+		}, nil
+	}
 }
 
 func (p _PingerServer) SendPing(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
-	if p.options.ServerHandler == nil {
+	if p.options.ServerHandlerFactory == nil {
 		return nil, errors.New("no handler defined")
 	}
-	return p.options.ServerHandler(ctx, ping)
+	handler := p.options.ServerHandlerFactory(p.options.Logger)
+	return handler(ctx, ping)
 }
