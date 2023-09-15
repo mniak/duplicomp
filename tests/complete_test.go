@@ -25,8 +25,6 @@ func TestComplete(t *testing.T) {
 
 	rootLogger := log2.Sub(log2.FromWriter(os.Stdout), "    ")
 	mainLogger := log2.Sub(rootLogger, "TEST ")
-	mainLogger.Println("-- test start --")
-	defer mainLogger.Println("-- test end --")
 
 	// Primary server
 	primary := lo.Must(samples.RunServer(
