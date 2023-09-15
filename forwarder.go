@@ -15,11 +15,10 @@ import (
 )
 
 type Forwarder struct {
-	LogName           string
-	Method            string
-	Server            Stream
-	ServerObservable  rxgo.Observable
-	InboundConnection *grpc.ClientConn
+	LogName    string
+	Method     string
+	Downstream Stream
+	Upstream   Stream
 }
 
 func (f *Forwarder) Run(ctx context.Context) (err error) {
@@ -32,7 +31,7 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 
 	var wg sync.WaitGroup
 	var combinedErrors error
-	protoIn, err := f.InboundConnection.NewStream(ctx, &grpc.StreamDesc{}, f.Method)
+	protoIn, err := f.Upstream.NewStream(ctx, &grpc.StreamDesc{}, f.Method)
 	if err != nil {
 		return err
 	}
@@ -43,7 +42,7 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := f.forwardMessages(f.ServerObservable, in)
+		err := f.forwardMessages(f.DownstreamObservable, in)
 		multierr.AppendInto(&combinedErrors, err)
 	}()
 
@@ -51,7 +50,7 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 	go func() {
 		defer wg.Done()
 		defer protoIn.CloseSend()
-		err := f.forwardMessages(clientObs, f.Server)
+		err := f.forwardMessages(clientObs, f.Downstream)
 		multierr.AppendInto(&combinedErrors, err)
 	}()
 
