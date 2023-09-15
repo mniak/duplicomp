@@ -1,5 +1,7 @@
 package duplicomp
 
+import "context"
+
 type InboundConfig struct {
 	ListenAddress string
 }
@@ -35,26 +37,6 @@ type Proxy interface {
 // }
 
 type TargetConnection interface {
-	Stream() Stream
+	Stream(ctx context.Context, method string) (Stream, error)
 	Close()
-}
-
-func connectTo(outConfig OutboundConfig) TargetConnection {
-	// for _, outConfig := range outConfigs {
-	// 	clientCredentials := insecure.NewCredentials()
-	// 	conn, err := grpc.Dial(outConfig.TargetAddress,
-	// 		grpc.WithTransportCredentials(clientCredentials),
-	// 		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
-	// 	)
-	// 	coinn
-	// 	if err != nil {
-	// 		break
-	// 	}
-	// 	p.connections = append(p.connections, conn)
-	// }
-	// if err != nil {
-	// 	p.Stop()
-	// 	return err
-	// }
-	return nil
 }

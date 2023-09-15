@@ -74,7 +74,7 @@ func TestComplete(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	go func() {
 		mainLogger.Println("Starting gateway")
-		gateway.RunGateway(ctx, gateway.ProxyParams{
+		gateway.RunGateway(ctx, gateway.GatewayParams{
 			ListenPort:    GATEWAY_PORT,
 			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
 			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),

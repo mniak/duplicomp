@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	var params gateway.ProxyParams
+	var params gateway.GatewayParams
 	flag.IntVar(&params.ListenPort, "listen-port", 9091, "TCP port to listen")
 	flag.StringVar(&params.PrimaryTarget, "target", ":9001", "Connection target")
 	flag.StringVar(&params.ShadowTarget, "shadow-target", "", "Shadow connection target")

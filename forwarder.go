@@ -10,13 +10,10 @@ import (
 
 	"github.com/reactivex/rxgo/v2"
 	"go.uber.org/multierr"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
 
 type Forwarder struct {
-	LogName    string
-	Method     string
 	Downstream Stream
 	Upstream   Stream
 }
@@ -31,31 +28,43 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 
 	var wg sync.WaitGroup
 	var combinedErrors error
-	protoIn, err := f.Upstream.NewStream(ctx, &grpc.StreamDesc{}, f.Method)
-	if err != nil {
-		return err
-	}
-	in := InOutStream(StreamFromProtobuf(protoIn))
-	clientObs := ObservableFromStream(ctx, in)
 
-	// Receive from server and forward to client
-	wg.Add(1)
+	errorChan := make(chan error)
 	go func() {
-		defer wg.Done()
-		err := f.forwardMessages(f.DownstreamObservable, in)
-		multierr.AppendInto(&combinedErrors, err)
+		for err := range errorChan {
+			multierr.AppendInto(&combinedErrors, err)
+		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer protoIn.CloseSend()
-		err := f.forwardMessages(clientObs, f.Downstream)
-		multierr.AppendInto(&combinedErrors, err)
+		err := f.forward(ctx, f.Downstream, f.Upstream)
+		errorChan <- err
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := f.forward(ctx, f.Upstream, f.Downstream)
+		errorChan <- err
 	}()
 
 	wg.Wait()
 	return combinedErrors
+}
+
+func (f *Forwarder) forward(ctx context.Context, from InputStream, to OutputStream) error {
+	for {
+		msg, err := from.Receive()
+		if err != nil {
+			return err
+		}
+		err = to.Send(msg)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
