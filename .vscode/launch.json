@@ -36,6 +36,13 @@
                 "--shadow-target", ":9002",
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Demo with Gateway",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/samples/demo_with_gateway",
         }
     ]
 }

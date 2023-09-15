@@ -14,11 +14,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RunServer(opts ..._Option) error {
+func RunServer(opts ..._Option) (Stoppable, error) {
 	options := *defaultOptions().apply(opts...)
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", options.Port))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer lis.Close()
 
@@ -30,7 +30,10 @@ func RunServer(opts ..._Option) error {
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
 
-	return server.Serve(lis)
+	go func() {
+		server.Serve(lis)
+	}()
+	return stoppable(server.GracefulStop), nil
 }
 
 type _PingerServer struct {
@@ -58,20 +61,4 @@ func (p _PingerServer) SendPing(ctx context.Context, ping *internal.Ping) (*inte
 		return nil, errors.New("no handler defined")
 	}
 	return p.options.ServerHandler(ctx, ping)
-}
-
-func RunMockServer(port int) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
-	if err != nil {
-		return err
-	}
-	defer lis.Close()
-
-	pinger := _PingerServer{}
-
-	log.Println("Server Started. Waiting for calls.")
-	server := grpc.NewServer()
-	internal.RegisterPingerServer(server, pinger)
-
-	return server.Serve(lis)
 }
