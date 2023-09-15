@@ -65,6 +65,7 @@ func (h _ServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong
 	return h(ctx, ping)
 }
 
+//go:generate mockgen -package=tests -destination=../../tests/mock_server_handler_test.go . ServerHandler
 type ServerHandler interface {
 	Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
 }

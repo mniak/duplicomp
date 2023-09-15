@@ -10,34 +10,58 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/gateway"
 	"github.com/mniak/duplicomp/internal/samples"
+	"github.com/mniak/duplicomp/internal/samples/grpc"
 	"github.com/mniak/duplicomp/log2"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 )
 
 func TestComplete(t *testing.T) {
-	ctx, stop := context.WithCancel(context.Background())
-	defer stop()
-
 	const PRIMARY_PORT = 9999
 	const SHADOW_PORT = 8888
 	const GATEWAY_PORT = 9000
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx, stop := context.WithCancel(context.Background())
+	defer stop()
+
 	rootLogger := log2.Sub(log2.FromWriter(os.Stdout), "    ")
 	mainLogger := log2.Sub(rootLogger, "TEST ")
 
+	fakePingMessage := gofakeit.SentenceSimple()
+	fakePrimaryReply := gofakeit.SentenceSimple()
+
+	mockPrimaryHandler := NewMockServerHandler(ctrl)
+	mockPrimaryHandler.EXPECT().
+		Handle(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
+			require.Equal(t, fakePingMessage, *ping.Message)
+			return &grpc.Pong{
+				Reply:    ptr(fakePrimaryReply),
+				ServedBy: ptr("primary"),
+			}, nil
+		})
+
+	mockShadowHandler := NewMockServerHandler(ctrl)
+
 	// Primary server
-	primary := lo.Must(samples.RunServer(
+	primary, err := samples.RunServer(
 		samples.WithLogger(log2.Sub(rootLogger, "PRIM ")),
 		samples.WithPort(PRIMARY_PORT),
-	))
+		samples.WithHandler(mockPrimaryHandler),
+	)
+	require.NoError(t, err)
 	defer primary.Stop()
 
 	// Shadow server
-	secondary := lo.Must(samples.RunServer(
+	secondary, err := samples.RunServer(
 		samples.WithLogger(log2.Sub(rootLogger, "SHAD ")),
 		samples.WithPort(SHADOW_PORT),
-	))
+		samples.WithHandler(mockShadowHandler),
+	)
+	require.NoError(t, err)
 	defer secondary.Stop()
 
 	// Gateway
@@ -53,12 +77,16 @@ func TestComplete(t *testing.T) {
 
 	// Client
 	time.Sleep(1 * time.Second)
-	message := gofakeit.Sentence(8)
-	pong := lo.Must(samples.RunSendPing(
-		message,
+	pong, err := samples.RunSendPing(
+		fakePingMessage,
 		samples.WithLogger(log2.Sub(rootLogger, "CLIE ")),
 		samples.WithPort(PRIMARY_PORT),
-	))
+	)
+	require.NoError(t, err)
+	require.Equal(t, fakePrimaryReply, *pong.Reply)
+	require.Equal(t, "primary", *pong.ServedBy)
+}
 
-	require.Equal(t, message, *pong.Reply)
+func ptr[T any](t T) *T {
+	return &t
 }
