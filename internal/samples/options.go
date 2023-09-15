@@ -1,25 +1,21 @@
 package samples
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/mniak/duplicomp/internal/noop"
-	"github.com/mniak/duplicomp/internal/samples/grpc"
 )
-
-type _ServerHandler func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
 
 type _Options struct {
 	Port                 int
 	Logger               *log.Logger
-	ServerHandlerFactory func(*log.Logger) _ServerHandler
+	ServerHandlerFactory func(*log.Logger) ServerHandler
 }
 type _Option func(*_Options)
 
-func WithHandlerFactory(hf func(*log.Logger) _ServerHandler) _Option {
+func WithHandlerFactory(hf func(*log.Logger) ServerHandler) _Option {
 	return func(o *_Options) {
 		o.ServerHandlerFactory = hf
 	}
@@ -54,6 +50,6 @@ func defaultOptions() *_Options {
 	return &_Options{
 		Port:                 9000,
 		Logger:               noop.Logger(),
-		ServerHandlerFactory: defaultServerHandler,
+		ServerHandlerFactory: defaultServerHandlerFactory,
 	}
 }

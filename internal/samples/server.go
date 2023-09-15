@@ -54,23 +54,41 @@ func ptr[T any](t T) *T {
 	return &t
 }
 
-func defaultServerHandler(logger *log.Logger) _ServerHandler {
-	return func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
-		meta, hasMeta := metadata.FromIncomingContext(ctx)
-		logger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
-
-		return &grpc.Pong{
-			OriginalMessage:    ping.Message,
-			CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
-			RandomNumber:       ptr(gofakeit.Int32()),
-		}, nil
-	}
-}
-
 func (p _PingerServer) SendPing(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
 	if p.options.ServerHandlerFactory == nil {
 		return nil, errors.New("no handler defined")
 	}
 	handler := p.options.ServerHandlerFactory(p.options.Logger)
-	return handler(ctx, ping)
+	return handler.Handle(ctx, ping)
+}
+
+type _ServerHandler func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
+
+func (h _ServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
+	return h(ctx, ping)
+}
+
+type ServerHandler interface {
+	Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
+}
+
+type defaultServerHandler struct {
+	logger *log.Logger
+}
+
+func (h defaultServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
+	meta, hasMeta := metadata.FromIncomingContext(ctx)
+	h.logger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
+
+	return &grpc.Pong{
+		OriginalMessage:    ping.Message,
+		CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
+		RandomNumber:       ptr(gofakeit.Int32()),
+	}, nil
+}
+
+func defaultServerHandlerFactory(logger *log.Logger) ServerHandler {
+	return defaultServerHandler{
+		logger: logger,
+	}
 }
