@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -14,26 +15,39 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RunServer(opts ..._Option) (Stoppable, error) {
+var defaultServerLogger = log.New(os.Stdout, "[Server] ", 0)
+
+func RunServer(opts ..._Option) (stop Stoppable, err error) {
+	logger := defaultServerLogger
+
 	options := *defaultOptions().apply(opts...)
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", options.Port))
 	if err != nil {
 		return nil, err
 	}
-	defer lis.Close()
+	defer func() {
+		if stop == nil {
+			lis.Close()
+		}
+	}()
 
 	pinger := _PingerServer{
 		options: options,
 	}
 
-	log.Println("Server Started. Waiting for calls.")
+	logger.Println("Server Started. Waiting for calls.")
 	server := grpc.NewServer()
 	internal.RegisterPingerServer(server, pinger)
 
 	go func() {
 		server.Serve(lis)
 	}()
-	return stoppable(server.GracefulStop), nil
+	return stoppable(func() {
+		logger.Println("Stopping gRPC server")
+		server.GracefulStop()
+		lis.Close()
+		logger.Println("Listener stopped")
+	}), nil
 }
 
 type _PingerServer struct {
@@ -47,7 +61,7 @@ func ptr[T any](t T) *T {
 
 func defaultServerHandler(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
 	meta, hasMeta := metadata.FromIncomingContext(ctx)
-	log.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
+	defaultServerLogger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
 
 	return &internal.Pong{
 		OriginalMessage:    ping.Message,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/samples/internal"
@@ -14,6 +15,7 @@ import (
 )
 
 func RunSendPing(opts ..._Option) error {
+	logger := log.New(os.Stdout, "[Client] ", 0)
 	options := *defaultOptions().apply(opts...)
 	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", options.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -28,14 +30,14 @@ func RunSendPing(opts ..._Option) error {
 	ctx := metadata.NewOutgoingContext(context.Background(), meta)
 
 	phrase := gofakeit.SentenceSimple()
-	log.Printf("PING %s", phrase)
+	logger.Printf("PING %s", phrase)
 	resp, err := client.SendPing(ctx, &internal.Ping{
 		Message: &phrase,
 	})
 	if err != nil {
-		log.Printf("ERROR %s", err)
+		logger.Print("ERROR %s", err)
 		return err
 	}
-	log.Printf("PONG %s", resp)
+	logger.Printf("PONG %s", resp)
 	return nil
 }
