@@ -33,6 +33,6 @@ func (s *protoStream) Send(m proto.Message) error {
 
 func (s *protoStream) Receive() (proto.Message, error) {
 	msg := new(emptypb.Empty)
-	err := s.stream.RecvMsg(&msg)
+	err := s.stream.RecvMsg(msg)
 	return msg, err
 }

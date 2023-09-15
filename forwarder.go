@@ -11,7 +11,6 @@ import (
 	"github.com/reactivex/rxgo/v2"
 	"go.uber.org/multierr"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -21,7 +20,6 @@ type Forwarder struct {
 	Server            Stream
 	ServerObservable  rxgo.Observable
 	InboundConnection *grpc.ClientConn
-	DiscardResponses  bool
 }
 
 func (f *Forwarder) Run(ctx context.Context) (err error) {
@@ -49,16 +47,13 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 		multierr.AppendInto(&combinedErrors, err)
 	}()
 
-	// Receive from client and forward to server
-	if !f.DiscardResponses {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer protoIn.CloseSend()
-			err := f.forwardMessages(clientObs, f.Server)
-			multierr.AppendInto(&combinedErrors, err)
-		}()
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer protoIn.CloseSend()
+		err := f.forwardMessages(clientObs, f.Server)
+		multierr.AppendInto(&combinedErrors, err)
+	}()
 
 	wg.Wait()
 	return combinedErrors
@@ -68,16 +63,15 @@ func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 	var err error
 	for item := range from.Observe() {
 		if item.Error() {
-			err = item.E
-			break
+			return item.E
 		}
 		msg := item.V.(proto.Message)
 		err = to.Send(msg)
 		if err != nil {
-			break
+			return err
 		}
 	}
-	return err
+	return nil
 }
 
 func ObservableFromProtoStream(ctx context.Context, protoStream iProtoStream) rxgo.Observable {
@@ -116,16 +110,4 @@ func ObservableFromStream(ctx context.Context, stream Stream) rxgo.Observable {
 		}
 	}})
 	return obs
-}
-
-func copyHeadersFromIncomingToOutcoming(in, out context.Context) context.Context {
-	meta, hasMeta := metadata.FromIncomingContext(in)
-	if hasMeta {
-		for k, vals := range meta {
-			for _, v := range vals {
-				in = metadata.AppendToOutgoingContext(out, k, v)
-			}
-		}
-	}
-	return in
 }

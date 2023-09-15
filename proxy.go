@@ -95,8 +95,8 @@ func (p *GRPCProxy) connectionHandler(_ any, protoServer grpc.ServerStream) erro
 
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
-	// server := NewProtoStream(protoServer)
-	// serverObservable := ObservableFromStream(ctx, server)
+	server := NewProtoStream(protoServer)
+	serverObservable := ObservableFromStream(ctx, server)
 
 	// if p.UseShadow {
 	// 	go func() {
@@ -115,16 +115,16 @@ func (p *GRPCProxy) connectionHandler(_ any, protoServer grpc.ServerStream) erro
 	// 	}()
 	// }
 
-	// primary := Forwarder{
-	// 	Method:            method,
-	// 	Server:            server,
-	// 	ServerObservable:  serverObservable,
-	// 	InboundConnection: p.PrimaryClientConnection,
-	// }
-	// err := primary.Run(ctx)
-	// if err != nil {
-	// 	return status.Errorf(codes.Internal, err.Error())
-	// }
+	primary := Forwarder{
+		Method:            method,
+		Server:            server,
+		ServerObservable:  serverObservable,
+		InboundConnection: p.connections[0],
+	}
+	err := primary.Run(ctx)
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
 	return nil
 }
 
