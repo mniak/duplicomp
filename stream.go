@@ -5,10 +5,21 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-//go:generate mockgen -package=duplicomp -destination=mock_stream_test.go . Stream
 type Stream interface {
-	Send(m proto.Message) error
-	Receive() (proto.Message, error)
+	InputStream
+	OutputStream
+}
+
+type inOutStream struct {
+	InputStream
+	OutputStream
+}
+
+func InOutStream(in InputStream, out OutputStream) Stream {
+	return &inOutStream{
+		InputStream:  in,
+		OutputStream: out,
+	}
 }
 
 type iProtoStream interface {
@@ -16,10 +27,11 @@ type iProtoStream interface {
 	RecvMsg(m interface{}) error
 }
 
-func NewProtoStream(s iProtoStream) Stream {
-	return &protoStream{
+func StreamFromProtobuf(s iProtoStream) (InputStream, OutputStream) {
+	str := protoStream{
 		stream: s,
 	}
+	return &str, &str
 }
 
 type protoStream struct {

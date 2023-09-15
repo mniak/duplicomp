@@ -36,7 +36,7 @@ func (f *Forwarder) Run(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	in := NewProtoStream(protoIn)
+	in := InOutStream(StreamFromProtobuf(protoIn))
 	clientObs := ObservableFromStream(ctx, in)
 
 	// Receive from server and forward to client
@@ -75,7 +75,7 @@ func (f *Forwarder) forwardMessages(from rxgo.Observable, to Stream) error {
 }
 
 func ObservableFromProtoStream(ctx context.Context, protoStream iProtoStream) rxgo.Observable {
-	stream := NewProtoStream(protoStream)
+	stream := InOutStream(StreamFromProtobuf(protoStream))
 	obs := ObservableFromStream(ctx, stream)
 	return obs
 }

@@ -95,7 +95,7 @@ func (p *GRPCProxy) connectionHandler(_ any, protoServer grpc.ServerStream) erro
 
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
-	server := NewProtoStream(protoServer)
+	server := InOutStream(StreamFromProtobuf(protoServer))
 	serverObservable := ObservableFromStream(ctx, server)
 
 	primary := Forwarder{
