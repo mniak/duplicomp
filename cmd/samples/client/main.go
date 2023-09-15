@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/samples"
@@ -14,5 +15,6 @@ func main() {
 	flag.Parse()
 
 	msg := gofakeit.Sentence(8)
-	lo.Must0(samples.RunSendPing(msg, samples.WithPort(port)))
+	pong := lo.Must(samples.RunSendPing(msg, samples.WithPort(port)))
+	log.Printf("PONG %s", pong)
 }

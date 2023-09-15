@@ -27,13 +27,8 @@ func RunSendPing(phrase string, opts ..._Option) (*grpc.Pong, error) {
 	ctx := metadata.NewOutgoingContext(context.Background(), meta)
 
 	o.Logger.Printf("PING %s", phrase)
-	pnog, err := client.SendPing(ctx, &grpc.Ping{
+	pong, err := client.SendPing(ctx, &grpc.Ping{
 		Message: &phrase,
 	})
-	if err != nil {
-		o.Logger.Printf("ERROR %s", err)
-		return nil, err
-	}
-	o.Logger.Printf("PONG %s", pnog)
-	return pnog, nil
+	return pong, err
 }
