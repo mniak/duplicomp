@@ -4,7 +4,7 @@
 // - protoc             v4.23.4
 // source: ping.proto
 
-package internal
+package grpc
 
 import (
 	context "context"

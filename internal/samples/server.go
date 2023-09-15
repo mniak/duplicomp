@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/internal/samples/internal"
-	"google.golang.org/grpc"
+	"github.com/mniak/duplicomp/internal/samples/grpc"
+	g "google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -31,8 +31,8 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 	}
 
 	o.Logger.Println("Server Started. Waiting for calls.")
-	server := grpc.NewServer()
-	internal.RegisterPingerServer(server, pinger)
+	server := g.NewServer()
+	grpc.RegisterPingerServer(server, pinger)
 
 	go func() {
 		server.Serve(lis)
@@ -46,7 +46,7 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 }
 
 type _PingerServer struct {
-	internal.PingerServer
+	grpc.PingerServer
 	options _Options
 }
 
@@ -55,11 +55,11 @@ func ptr[T any](t T) *T {
 }
 
 func defaultServerHandler(logger *log.Logger) _ServerHandler {
-	return func(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
+	return func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
 		meta, hasMeta := metadata.FromIncomingContext(ctx)
 		logger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
 
-		return &internal.Pong{
+		return &grpc.Pong{
 			OriginalMessage:    ping.Message,
 			CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
 			RandomNumber:       ptr(gofakeit.Int32()),
@@ -67,7 +67,7 @@ func defaultServerHandler(logger *log.Logger) _ServerHandler {
 	}
 }
 
-func (p _PingerServer) SendPing(ctx context.Context, ping *internal.Ping) (*internal.Pong, error) {
+func (p _PingerServer) SendPing(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
 	if p.options.ServerHandlerFactory == nil {
 		return nil, errors.New("no handler defined")
 	}

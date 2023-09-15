@@ -4,7 +4,7 @@
 // 	protoc        v4.24.2
 // source: ping.proto
 
-package internal
+package grpc
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/mniak/duplicomp/internal/noop"
-	"github.com/mniak/duplicomp/internal/samples/internal"
+	"github.com/mniak/duplicomp/internal/samples/grpc"
 )
 
-type _ServerHandler func(ctx context.Context, ping *internal.Ping) (*internal.Pong, error)
+type _ServerHandler func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
 
 type _Options struct {
 	Port                 int
