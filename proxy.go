@@ -98,23 +98,6 @@ func (p *GRPCProxy) connectionHandler(_ any, protoServer grpc.ServerStream) erro
 	server := NewProtoStream(protoServer)
 	serverObservable := ObservableFromStream(ctx, server)
 
-	// if p.UseShadow {
-	// 	go func() {
-	// 		shadow := Forwarder{
-	// 			LogName:           "Shadow",
-	// 			Method:            method,
-	// 			Server:            server,
-	// 			ServerObservable:  serverObservable,
-	// 			InboundConnection: p.ShadowClientConnection,
-	// 			DiscardResponses:  true,
-	// 		}
-	// 		err := shadow.Run(ctx)
-	// 		if err != nil {
-	// 			log.Printf("[Shadow] Failure: %s", err.Error())
-	// 		}
-	// 	}()
-	// }
-
 	primary := Forwarder{
 		Method:            method,
 		Server:            server,
