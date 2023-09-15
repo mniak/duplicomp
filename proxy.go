@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/mniak/duplicomp/internal/noop"
+	"github.com/mniak/duplicomp/log2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -35,7 +36,7 @@ type Proxy interface {
 
 type GRPCProxy struct {
 	config ProxyConfig
-	logger *log.Logger
+	logger log2.Logger
 
 	listener    net.Listener
 	connections []*grpc.ClientConn
@@ -61,7 +62,7 @@ func (p *GRPCProxy) LoggingToWithPrefix(w io.Writer, prefix string) *GRPCProxy {
 	return p
 }
 
-func (p *GRPCProxy) WithLogger(logger *log.Logger) *GRPCProxy {
+func (p *GRPCProxy) WithLogger(logger log2.Logger) *GRPCProxy {
 	p.logger = logger
 	return p
 }

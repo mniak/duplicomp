@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/gateway"
 	"github.com/mniak/duplicomp/internal/samples"
+	"github.com/mniak/duplicomp/log2"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 )
@@ -19,32 +19,33 @@ func TestComplete(t *testing.T) {
 	ctx, stop := context.WithCancel(context.Background())
 	defer stop()
 
-	logger := log.New(os.Stdout, "[Main] ", 0)
-
 	const PRIMARY_PORT = 9999
 	const SHADOW_PORT = 8888
 	const GATEWAY_PORT = 9000
 
+	rootLogger := log2.Sub(log2.FromWriter(os.Stdout), "    ")
+	mainLogger := log2.Sub(rootLogger, "TEST ")
+	mainLogger.Println("-- test start --")
+	defer mainLogger.Println("-- test end --")
+
 	// Primary server
-	logger.Println("Starting primary server")
 	primary := lo.Must(samples.RunServer(
-		samples.WithName("Primary"),
+		samples.WithLogger(log2.Sub(rootLogger, "PRIM ")),
 		samples.WithPort(PRIMARY_PORT),
 	))
 	defer primary.Stop()
 
 	// Shadow server
-	logger.Println("Starting shadow server")
 	secondary := lo.Must(samples.RunServer(
-		samples.WithName("Shadow"),
+		samples.WithLogger(log2.Sub(rootLogger, "SHAD ")),
 		samples.WithPort(SHADOW_PORT),
 	))
 	defer secondary.Stop()
 
 	// Gateway
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	go func() {
-		logger.Println("Starting gateway")
+		mainLogger.Println("Starting gateway")
 		gateway.RunGateway(ctx, gateway.ProxyParams{
 			ListenPort:    GATEWAY_PORT,
 			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
@@ -53,14 +54,13 @@ func TestComplete(t *testing.T) {
 	}()
 
 	// Client
-	time.Sleep(3 * time.Second)
-	logger.Println("Sending PING")
+	time.Sleep(1 * time.Second)
 	message := gofakeit.Sentence(8)
 	pong := lo.Must(samples.RunSendPing(
 		message,
-		samples.WithName("Client"),
+		samples.WithLogger(log2.Sub(rootLogger, "CLIE ")),
 		samples.WithPort(PRIMARY_PORT),
 	))
 
-	require.Equal(t, message, *pong.OriginalMessage)
+	require.Equal(t, message, *pong.Reply)
 }

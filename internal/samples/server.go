@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
-	"strings"
 
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/samples/grpc"
+	"github.com/mniak/duplicomp/log2"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -55,11 +53,10 @@ func ptr[T any](t T) *T {
 }
 
 func (p _PingerServer) SendPing(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
-	if p.options.ServerHandlerFactory == nil {
+	if p.options.ServerHandler == nil {
 		return nil, errors.New("no handler defined")
 	}
-	handler := p.options.ServerHandlerFactory(p.options.Logger)
-	return handler.Handle(ctx, ping)
+	return p.options.ServerHandler.Handle(ctx, ping)
 }
 
 type _ServerHandler func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error)
@@ -73,7 +70,7 @@ type ServerHandler interface {
 }
 
 type defaultServerHandler struct {
-	logger *log.Logger
+	logger log2.Logger
 }
 
 func (h defaultServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
@@ -81,14 +78,7 @@ func (h defaultServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grp
 	h.logger.Printf("PING %s (hasMeta=%v, meta=%v)", *ping.Message, hasMeta, meta)
 
 	return &grpc.Pong{
-		OriginalMessage:    ping.Message,
-		CapitalizedMessage: ptr(strings.ToUpper(*ping.Message)),
-		RandomNumber:       ptr(gofakeit.Int32()),
+		Reply:    ping.Message,
+		ServedBy: ptr("Default Server Handler"),
 	}, nil
-}
-
-func defaultServerHandlerFactory(logger *log.Logger) ServerHandler {
-	return defaultServerHandler{
-		logger: logger,
-	}
 }

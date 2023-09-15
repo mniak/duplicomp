@@ -1,7 +1,6 @@
 package samples
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -25,6 +24,5 @@ func TestClientConnectingToServer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, pong)
 
-	assert.Equal(t, phrase, *pong.OriginalMessage)
-	assert.Equal(t, strings.ToUpper(phrase), *pong.CapitalizedMessage)
+	assert.Equal(t, phrase, *pong.Reply)
 }
