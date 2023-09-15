@@ -1,3 +1,5 @@
+option go_package = "../grpc";
+
 service Pinger {
   rpc SendPing (Ping) returns (Pong) {}
 }
