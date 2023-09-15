@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RunSendPing(opts ..._Option) error {
+func RunSendPing(phrase string, opts ..._Option) (*internal.Pong, error) {
 	o := defaultOptions().apply(opts...)
 	conn := lo.Must(grpc.Dial(fmt.Sprintf(":%d", o.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -26,15 +26,14 @@ func RunSendPing(opts ..._Option) error {
 	}
 	ctx := metadata.NewOutgoingContext(context.Background(), meta)
 
-	phrase := gofakeit.SentenceSimple()
 	o.Logger.Printf("PING %s", phrase)
-	resp, err := client.SendPing(ctx, &internal.Ping{
+	pnog, err := client.SendPing(ctx, &internal.Ping{
 		Message: &phrase,
 	})
 	if err != nil {
-		o.Logger.Print("ERROR %s", err)
-		return err
+		o.Logger.Printf("ERROR %s", err)
+		return nil, err
 	}
-	o.Logger.Printf("PONG %s", resp)
-	return nil
+	o.Logger.Printf("PONG %s", pnog)
+	return pnog, nil
 }

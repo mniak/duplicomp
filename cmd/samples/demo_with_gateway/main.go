@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/mniak/duplicomp/internal/gateway"
 	"github.com/mniak/duplicomp/internal/samples"
 	"github.com/samber/lo"
@@ -52,8 +53,14 @@ func main() {
 	// Client
 	time.Sleep(3 * time.Second)
 	logger.Println("Sending PING")
-	lo.Must0(samples.RunSendPing(
+	message := gofakeit.Sentence(8)
+	pong := lo.Must(samples.RunSendPing(
+		message,
 		samples.WithName("Client"),
 		samples.WithPort(PRIMARY_PORT),
 	))
+
+	if *pong.OriginalMessage != message {
+		logger.Fatalln("Original message mismatch")
+	}
 }
