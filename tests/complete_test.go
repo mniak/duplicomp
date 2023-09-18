@@ -34,14 +34,7 @@ func TestComplete(t *testing.T) {
 
 	fakePingMessage := gofakeit.SentenceSimple()
 
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "------- PANIC: %v\n", r)
-		}
-	}()
-
 	// ------- Primary server --------
-
 	var fakePrimaryPong grpc.Pong
 	gofakeit.Struct(&fakePrimaryPong)
 	mockPrimaryHandler := NewMockServerHandler(ctrl)
@@ -60,7 +53,6 @@ func TestComplete(t *testing.T) {
 	defer primary.Stop()
 
 	// ------- Shadow server --------
-
 	var fakeShadowPong grpc.Pong
 	gofakeit.Struct(&fakeShadowPong)
 	mockShadowHandler := NewMockServerHandler(ctrl)
@@ -100,7 +92,7 @@ func TestComplete(t *testing.T) {
 		samples.WithPort(GATEWAY_PORT),
 	)
 
-	time.Sleep(200 * time.Second)
+	time.Sleep(1 * time.Second)
 	require.NoError(t, err)
 	require.Equal(t, fakePrimaryPong.Reply, pong.Reply)
 	require.Equal(t, fakePrimaryPong.ServedBy, pong.ServedBy)

@@ -29,7 +29,6 @@ func RunSendPing(phrase string, opts ..._Option) (*grpc.Pong, error) {
 	pong, err := client.SendPing(ctx, &grpc.Ping{
 		Message: &phrase,
 	})
-	panic("============> 267")
 	if pong != nil {
 		o.Logger.Printf("PONG -- '%s'", *pong.Reply)
 	} else if err != nil {

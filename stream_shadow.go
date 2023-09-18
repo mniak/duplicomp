@@ -1,6 +1,8 @@
 package duplicomp
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -16,31 +18,33 @@ type StreamWithShadow struct {
 	Logger  ShadowLogger
 }
 
-func (fs *StreamWithShadow) Send(m proto.Message) error {
-	err := fs.Primary.Send(m)
+func (self *StreamWithShadow) Send(m proto.Message) error {
+	err := self.Primary.Send(m)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		err := fs.Shadow.Send(m)
+		err := self.Shadow.Send(m)
 		if err != nil {
-			fs.Logger.LogSendFailure(err)
+			self.Logger.LogSendFailure(err)
 		}
 	}()
 
 	return nil
 }
 
-func (fs *StreamWithShadow) Receive() (proto.Message, error) {
-	msg, err := fs.Primary.Receive()
+func (self *StreamWithShadow) Receive() (proto.Message, error) {
+	msg, err := self.Primary.Receive()
 	if err != nil {
 		return msg, err
 	}
 
 	go func() {
-		shadowMsg, shadowErr := fs.Shadow.Receive()
-		fs.Logger.LogCompareReceive(msg, shadowMsg, shadowErr)
+		shadowMsg, shadowErr := self.Shadow.Receive()
+		_, _ = shadowMsg, shadowErr
+		fmt.Println("Shadow logger", self.Logger)
+		self.Logger.LogCompareReceive(msg, shadowMsg, shadowErr)
 	}()
 
 	return msg, nil

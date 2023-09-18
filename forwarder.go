@@ -3,9 +3,7 @@ package duplicomp
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
-	"log"
 	"sync"
 
 	"github.com/reactivex/rxgo/v2"
@@ -19,13 +17,6 @@ type Forwarder struct {
 }
 
 func (f *Forwarder) Run(ctx context.Context) (err error) {
-	defer func() {
-		data := recover()
-		if data != nil {
-			err = fmt.Errorf("forwarder panicked: %+v", data)
-		}
-	}()
-
 	var wg sync.WaitGroup
 	var combinedErrors error
 
@@ -72,13 +63,6 @@ func (f *Forwarder) forwardMessages(from rxgo.Observable, to OutputStream) error
 }
 
 func ObservableFromStream(ctx context.Context, stream InputStream) rxgo.Observable {
-	defer func() {
-		data := recover()
-		if data != nil {
-			log.Printf("[ReceiveFromStream] PANIC: %+v", data)
-		}
-	}()
-
 	obs := rxgo.Create([]rxgo.Producer{func(ctx context.Context, next chan<- rxgo.Item) {
 		for {
 			select {
