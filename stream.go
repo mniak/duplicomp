@@ -1,9 +1,9 @@
 package duplicomp
 
 import (
+	"github.com/mniak/duplicomp/empty"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoimpl"
-	"google.golang.org/protobuf/types/known/typepb"
 )
 
 type Stream interface {
@@ -51,7 +51,7 @@ type MyType struct {
 }
 
 func (s *protoStream) Receive() (proto.Message, error) {
-	msg := new(typepb.Type)
+	msg := new(empty.Empty)
 	err := s.stream.RecvMsg(msg)
 	return msg, err
 }
