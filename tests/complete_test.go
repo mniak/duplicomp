@@ -71,14 +71,12 @@ func TestComplete(t *testing.T) {
 
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
-	mockComparator := NewMockComparator(ctrl)
 	go func() {
 		mainLogger.Println("Starting gateway")
 		gateway.RunGateway(ctx, gateway.GatewayParams{
 			ListenAddress: fmt.Sprintf(":%d", GATEWAY_PORT),
 			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
 			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
-			Comparator:    mockComparator,
 		})
 	}()
 
