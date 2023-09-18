@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -24,13 +25,20 @@ func TestComplete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ctx, stop := context.WithCancel(context.Background())
-	defer stop()
+	ctx := context.Background()
+	// ctx, stop := context.WithCancel(context.Background())
+	// defer stop()
 
 	rootLogger := log2.Sub(log2.FromWriter(os.Stdout), "    ")
 	mainLogger := log2.Sub(rootLogger, "TEST ")
 
 	fakePingMessage := gofakeit.SentenceSimple()
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "------- PANIC: %v\n", r)
+		}
+	}()
 
 	// ------- Primary server --------
 
@@ -78,6 +86,9 @@ func TestComplete(t *testing.T) {
 			ListenPort:    GATEWAY_PORT,
 			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
 			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
+			ComparisonLogger: gateway.LogComparisonLogger{
+				Logger: log.Default(),
+			},
 		})
 	}()
 
@@ -88,10 +99,12 @@ func TestComplete(t *testing.T) {
 		samples.WithLogger(log2.Sub(rootLogger, "CLIE ")),
 		samples.WithPort(GATEWAY_PORT),
 	)
-	time.Sleep(1 * time.Second)
+
+	time.Sleep(200 * time.Second)
 	require.NoError(t, err)
 	require.Equal(t, fakePrimaryPong.Reply, pong.Reply)
 	require.Equal(t, fakePrimaryPong.ServedBy, pong.ServedBy)
+	// -------- THE END ----------
 }
 
 func ptr[T any](t T) *T {

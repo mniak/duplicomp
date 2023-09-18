@@ -7,7 +7,7 @@ import (
 //go:generate mockgen -package=duplicomp -destination=mock_shadowlogger_test.go . ShadowLogger
 type ShadowLogger interface {
 	LogSendFailure(error)
-	LogCompareReceive(msg, shadowMsg proto.Message, shadowErr error)
+	LogCompareReceive(primaryMsg, shadowMsg proto.Message, shadowErr error)
 }
 
 type StreamWithShadow struct {
