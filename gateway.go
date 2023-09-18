@@ -39,7 +39,7 @@ type _Gateway struct {
 	grpcServer GRPCServer
 }
 
-func StartNewGateway(listenAddr, primaryTarget, shadowTarget string) (GracefulStopper, error) {
+func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Comparator) (GracefulStopper, error) {
 	logger := log2.Sub(log.Default(), "[Gateway] ")
 	var cb PessimisticCallerback
 	defer cb.Callback()
@@ -75,6 +75,7 @@ func StartNewGateway(listenAddr, primaryTarget, shadowTarget string) (GracefulSt
 		ShadowConnection:  shadowConnection,
 		Listener:          listener,
 		Logger:            logger,
+		Comparator:        cmp,
 	}
 	gw.Start()
 	return StopperFunc(gw.GracefulStop), nil
@@ -94,9 +95,10 @@ func (gw *_Gateway) Start() error {
 			}
 
 			dualStream := StreamWithShadow{
-				Primary: primaryUpstream,
-				Shadow:  shadowUpstream,
-				Logger:  gw.Logger,
+				Primary:    primaryUpstream,
+				Shadow:     shadowUpstream,
+				Logger:     gw.Logger,
+				Comparator: gw.Comparator,
 			}
 
 			fwd := Forwarder{

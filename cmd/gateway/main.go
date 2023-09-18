@@ -17,7 +17,9 @@ func main() {
 	flag.StringVar(&shadowTarget, "shadow-target", "", "Shadow connection target")
 	flag.Parse()
 
-	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget)
+	cmp := LogComparator{}
+
+	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget, cmp)
 	if err != nil {
 		log.Fatalln(err)
 	}
