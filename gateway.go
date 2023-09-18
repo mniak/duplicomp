@@ -115,22 +115,6 @@ func (gw *_Gateway) GracefulStop() {
 	gw.grpcServer.GracefulStop()
 }
 
-// func establishConnections(primaryTarget, shadowTarget string) TargetConnection {
-// 	specs := []ConnectionSpec{
-// 		{Address: primaryTarget},
-// 		{Address: shadowTarget},
-// 	}
-
-// allConnected := make([]TargetConnection, 0, len(specs)
-
-// 	for _, spec := range specs {
-// 		conn, err := spec.Connect()
-// 		if err == nil {
-// 			return conn
-// 		}
-// 	}
-// }
-
 type grpcConnection struct {
 	conn *grpc.ClientConn
 }
