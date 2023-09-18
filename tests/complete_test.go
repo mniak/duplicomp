@@ -70,7 +70,7 @@ func TestComplete(t *testing.T) {
 	require.NoError(t, err)
 	defer secondary.Stop()
 
-	// Gateway
+	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
 	go func() {
 		mainLogger.Println("Starting gateway")
@@ -81,7 +81,7 @@ func TestComplete(t *testing.T) {
 		})
 	}()
 
-	// Client
+	// ------- Client --------
 	time.Sleep(1 * time.Second)
 	pong, err := samples.RunSendPing(
 		fakePingMessage,
