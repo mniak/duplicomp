@@ -24,10 +24,6 @@ func TestGateway_HappyPath(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ctx := context.Background()
-	// ctx, stop := context.WithCancel(context.Background())
-	// defer stop()
-
 	rootLogger := log2.Sub(log2.FromWriter(os.Stdout), "    ")
 	mainLogger := log2.Sub(rootLogger, "TEST ")
 
@@ -71,12 +67,10 @@ func TestGateway_HappyPath(t *testing.T) {
 
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
-	gw, err := duplicomp.NewGateway(fmt.Sprintf(":%d", GATEWAY_PORT), fmt.Sprintf(":%d", PRIMARY_PORT), fmt.Sprintf(":%d", SHADOW_PORT))
-	require.NoError(t, err)
-
 	mainLogger.Println("Starting gateway")
-	gw.Start(ctx)
-	defer gw.Stop()
+	stopGw, err := duplicomp.StartNewGateway(fmt.Sprintf(":%d", GATEWAY_PORT), fmt.Sprintf(":%d", PRIMARY_PORT), fmt.Sprintf(":%d", SHADOW_PORT))
+	defer stopGw.GracefulStop()
+	require.NoError(t, err)
 
 	// ------- Client --------
 	time.Sleep(1 * time.Second)

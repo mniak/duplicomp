@@ -1,19 +1,27 @@
 package main
 
 import (
-	"context"
 	"flag"
+	"log"
+	"syscall"
 
-	"github.com/mniak/duplicomp/internal/gateway"
-	"github.com/samber/lo"
+	"github.com/mniak/duplicomp"
 )
 
 func main() {
-	var params gateway.GatewayParams
-	flag.StringVar(&params.ListenAddress, "listen-address", ":9091", "TCP address to listen")
-	flag.StringVar(&params.PrimaryTarget, "target", ":9001", "Connection target")
-	flag.StringVar(&params.ShadowTarget, "shadow-target", "", "Shadow connection target")
+	var listenAddress string
+	var primaryTarget string
+	var shadowTarget string
+	flag.StringVar(&listenAddress, "listen-address", ":9091", "TCP address to listen")
+	flag.StringVar(&primaryTarget, "target", ":9001", "Connection target")
+	flag.StringVar(&shadowTarget, "shadow-target", "", "Shadow connection target")
 	flag.Parse()
 
-	lo.Must0(gateway.RunGateway(context.TODO(), params))
+	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	wait(syscall.SIGTERM, syscall.SIGINT)
+	stopGw.GracefulStop()
 }

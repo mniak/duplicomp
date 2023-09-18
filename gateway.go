@@ -2,9 +2,10 @@ package duplicomp
 
 import (
 	"context"
+	"log"
 	"net"
 
-	"github.com/mniak/duplicomp/internal/noop"
+	"github.com/mniak/duplicomp/log2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -24,8 +25,7 @@ func (lch LambdaConnectionHandler) HandleConnection(ctx context.Context, method 
 
 type Gateway interface {
 	Start(ctx context.Context) error
-	Stop()
-	Wait() error
+	Stopper
 }
 
 type _Gateway struct {
@@ -34,37 +34,53 @@ type _Gateway struct {
 	ShadowConnection  TargetConnection
 	Comparator        Comparator
 
+	Logger log2.Logger
+
 	grpcServer GRPCServer
 }
 
-func NewGateway(listenAddr, primaryTarget, shadowTarget string) (Gateway, error) {
+func StartNewGateway(listenAddr, primaryTarget, shadowTarget string) (GracefulStopper, error) {
+	logger := log2.Sub(log.Default(), "[Gateway] ")
+	var cb PessimisticCallerback
+	defer cb.Callback()
+
 	listener, err := net.Listen("tcp", listenAddr)
 	if err != nil {
+		logger.Printf("failed to open listener at %s", listenAddr)
 		return nil, err
 	}
+	cb.OnFailure(func() { listener.Close() })
+	logger.Printf("listener open at %s", listenAddr)
 
 	primaryConnection, err := ConnectionSpec{Address: primaryTarget}.Connect()
 	if err != nil {
+		logger.Printf("failed to establish primary connection to %s", primaryTarget)
 		return nil, err
 	}
+	cb.OnFailure(func() { primaryConnection.Close() })
+	logger.Printf("primary connection established to %s", primaryTarget)
 
 	shadowConnection, err := ConnectionSpec{Address: shadowTarget}.Connect()
 	if err != nil {
+		logger.Printf("failed to establish shadow connection to %s", primaryTarget)
 		return nil, err
 	}
+	cb.OnFailure(func() { shadowConnection.Close() })
+	logger.Printf("shadow connection established to %s", primaryTarget)
 
-	// var comparator LogComparator
+	cb.Succeeded()
 
 	gw := _Gateway{
 		PrimaryConnection: primaryConnection,
 		ShadowConnection:  shadowConnection,
 		Listener:          listener,
-		// Comparator:        comparator,
+		Logger:            logger,
 	}
-	return &gw, nil
+	gw.Start()
+	return StopperFunc(gw.GracefulStop), nil
 }
 
-func (gw *_Gateway) Start(ctx context.Context) error {
+func (gw *_Gateway) Start() error {
 	gw.grpcServer = GRPCServer{
 		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, method string, serverStream Stream) error {
 			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, method)
@@ -80,7 +96,7 @@ func (gw *_Gateway) Start(ctx context.Context) error {
 			dualStream := StreamWithShadow{
 				Primary: primaryUpstream,
 				Shadow:  shadowUpstream,
-				Logger:  noop.Logger(),
+				Logger:  gw.Logger,
 			}
 
 			fwd := Forwarder{
@@ -95,12 +111,8 @@ func (gw *_Gateway) Start(ctx context.Context) error {
 	return err
 }
 
-func (gw *_Gateway) Stop() {
-	gw.grpcServer.Stop()
-}
-
-func (gw *_Gateway) Wait() error {
-	return gw.grpcServer.Wait()
+func (gw *_Gateway) GracefulStop() {
+	gw.grpcServer.GracefulStop()
 }
 
 // func establishConnections(primaryTarget, shadowTarget string) TargetConnection {

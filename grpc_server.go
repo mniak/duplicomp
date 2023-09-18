@@ -2,7 +2,6 @@ package duplicomp
 
 import (
 	"context"
-	"log"
 	"net"
 
 	"github.com/mniak/duplicomp/internal/noop"
@@ -22,7 +21,6 @@ type GRPCServer struct {
 
 	listener net.Listener
 	runError error
-	stopped  chan struct{}
 	server   *grpc.Server
 }
 
@@ -30,7 +28,6 @@ func (self *GRPCServer) init() {
 	if self.Logger == nil {
 		self.Logger = noop.Logger()
 	}
-	self.stopped = make(chan struct{})
 }
 
 func (p *GRPCServer) Start(addr string) error {
@@ -54,9 +51,8 @@ func (self *GRPCServer) runAsync() {
 	go func() {
 		self.runError = self.run()
 		if self.runError != nil {
-			log.Printf("[Proxy] run failed with error: %s", self.runError)
+			self.Logger.Printf("Run failed with error: %s", self.runError)
 		}
-		close(self.stopped)
 	}()
 }
 
@@ -74,18 +70,11 @@ func (self *GRPCServer) run() error {
 	return nil
 }
 
-func (self *GRPCServer) Stop() {
-	if self.listener != nil {
-		self.listener.Close()
-		self.listener = nil
+func (self *GRPCServer) GracefulStop() {
+	if self.server != nil {
+		self.server.GracefulStop()
+		self.server = nil
 	}
-}
-
-func (self *GRPCServer) Wait() error {
-	if self.stopped != nil {
-		<-self.stopped
-	}
-	return self.runError
 }
 
 func (self *GRPCServer) onConnectionAccepted(_ any, protoServer grpc.ServerStream) error {
