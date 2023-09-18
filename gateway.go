@@ -19,8 +19,8 @@ type GatewayParams struct {
 
 type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
 
-func (lch LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
-	return lch(ctx, method, serverStream)
+func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
+	return h(ctx, method, serverStream)
 }
 
 type Gateway interface {
