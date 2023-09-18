@@ -22,7 +22,13 @@ func (lch LambdaConnectionHandler) HandleConnection(ctx context.Context, method 
 	return lch(ctx, method, serverStream)
 }
 
-type Gateway struct {
+type Gateway interface {
+	Start(ctx context.Context) error
+	Stop()
+	Wait() error
+}
+
+type _Gateway struct {
 	Listener          net.Listener
 	PrimaryConnection TargetConnection
 	ShadowConnection  TargetConnection
@@ -31,7 +37,34 @@ type Gateway struct {
 	grpcServer GRPCServer
 }
 
-func (gw *Gateway) Start(ctx context.Context) error {
+func NewGateway(listenAddr, primaryTarget, shadowTarget string) (Gateway, error) {
+	listener, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	primaryConnection, err := ConnectionSpec{Address: primaryTarget}.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	shadowConnection, err := ConnectionSpec{Address: shadowTarget}.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	// var comparator LogComparator
+
+	gw := _Gateway{
+		PrimaryConnection: primaryConnection,
+		ShadowConnection:  shadowConnection,
+		Listener:          listener,
+		// Comparator:        comparator,
+	}
+	return &gw, nil
+}
+
+func (gw *_Gateway) Start(ctx context.Context) error {
 	gw.grpcServer = GRPCServer{
 		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, method string, serverStream Stream) error {
 			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, method)
@@ -62,9 +95,12 @@ func (gw *Gateway) Start(ctx context.Context) error {
 	return err
 }
 
-func (gw *Gateway) Stop() error {
-	err := gw.grpcServer.Wait()
-	return err
+func (gw *_Gateway) Stop() {
+	gw.grpcServer.Stop()
+}
+
+func (gw *_Gateway) Wait() error {
+	return gw.grpcServer.Wait()
 }
 
 // func establishConnections(primaryTarget, shadowTarget string) TargetConnection {
@@ -87,8 +123,8 @@ type grpcConnection struct {
 	conn *grpc.ClientConn
 }
 
-func (c *grpcConnection) Stream(ctx context.Context, method string) (Stream, error) {
-	protoStream, err := c.conn.NewStream(ctx, &grpc.StreamDesc{}, method)
+func (self *grpcConnection) Stream(ctx context.Context, method string) (Stream, error) {
+	protoStream, err := self.conn.NewStream(ctx, &grpc.StreamDesc{}, method)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +132,9 @@ func (c *grpcConnection) Stream(ctx context.Context, method string) (Stream, err
 	return stream, nil
 }
 
-func (c *grpcConnection) Close() {
-	if c.conn != nil {
-		c.conn.Close()
+func (self *grpcConnection) Close() {
+	if self.conn != nil {
+		self.conn.Close()
 	}
 }
 
@@ -106,9 +142,9 @@ type ConnectionSpec struct {
 	Address string
 }
 
-func (cs ConnectionSpec) Connect() (TargetConnection, error) {
+func (self ConnectionSpec) Connect() (TargetConnection, error) {
 	clientCredentials := insecure.NewCredentials()
-	conn, err := grpc.Dial(cs.Address,
+	conn, err := grpc.Dial(self.Address,
 		grpc.WithTransportCredentials(clientCredentials),
 		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
 	)

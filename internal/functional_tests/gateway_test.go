@@ -1,4 +1,4 @@
-package tests
+package functional_tests
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/internal/gateway"
+	"github.com/mniak/duplicomp"
 	"github.com/mniak/duplicomp/internal/samples"
 	"github.com/mniak/duplicomp/internal/samples/grpc"
 	"github.com/mniak/duplicomp/log2"
@@ -16,7 +16,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-func TestComplete(t *testing.T) {
+func TestGateway_HappyPath(t *testing.T) {
 	PRIMARY_PORT := gofakeit.IntRange(63000, 65000)
 	SHADOW_PORT := PRIMARY_PORT + 1
 	GATEWAY_PORT := PRIMARY_PORT + 2
@@ -36,7 +36,7 @@ func TestComplete(t *testing.T) {
 	// ------- Primary server --------
 	var fakePrimaryPong grpc.Pong
 	gofakeit.Struct(&fakePrimaryPong)
-	mockPrimaryHandler := NewMockServerHandler(ctrl)
+	mockPrimaryHandler := samples.NewMockServerHandler(ctrl)
 	mockPrimaryHandler.EXPECT().
 		Handle(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
@@ -54,7 +54,7 @@ func TestComplete(t *testing.T) {
 	// ------- Shadow server --------
 	var fakeShadowPong grpc.Pong
 	gofakeit.Struct(&fakeShadowPong)
-	mockShadowHandler := NewMockServerHandler(ctrl)
+	mockShadowHandler := samples.NewMockServerHandler(ctrl)
 	mockShadowHandler.EXPECT().
 		Handle(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
@@ -71,14 +71,12 @@ func TestComplete(t *testing.T) {
 
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
-	go func() {
-		mainLogger.Println("Starting gateway")
-		gateway.RunGateway(ctx, gateway.GatewayParams{
-			ListenAddress: fmt.Sprintf(":%d", GATEWAY_PORT),
-			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
-			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
-		})
-	}()
+	gw, err := duplicomp.NewGateway(fmt.Sprintf(":%d", GATEWAY_PORT), fmt.Sprintf(":%d", PRIMARY_PORT), fmt.Sprintf(":%d", SHADOW_PORT))
+	require.NoError(t, err)
+
+	mainLogger.Println("Starting gateway")
+	gw.Start(ctx)
+	defer gw.Stop()
 
 	// ------- Client --------
 	time.Sleep(1 * time.Second)

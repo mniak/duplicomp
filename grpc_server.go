@@ -26,11 +26,11 @@ type GRPCServer struct {
 	server   *grpc.Server
 }
 
-func (p *GRPCServer) init() {
-	if p.Logger == nil {
-		p.Logger = noop.Logger()
+func (self *GRPCServer) init() {
+	if self.Logger == nil {
+		self.Logger = noop.Logger()
 	}
-	p.stopped = make(chan struct{})
+	self.stopped = make(chan struct{})
 }
 
 func (p *GRPCServer) Start(addr string) error {
@@ -42,66 +42,66 @@ func (p *GRPCServer) Start(addr string) error {
 	return p.StartWithListener(p.listener)
 }
 
-func (p *GRPCServer) StartWithListener(lis net.Listener) error {
-	p.init()
-	p.listener = lis
-	p.runAsync()
+func (self *GRPCServer) StartWithListener(lis net.Listener) error {
+	self.init()
+	self.listener = lis
+	self.runAsync()
 	return nil
 }
 
-func (p *GRPCServer) runAsync() {
-	p.runError = nil
+func (self *GRPCServer) runAsync() {
+	self.runError = nil
 	go func() {
-		p.runError = p.run()
-		if p.runError != nil {
-			log.Printf("[Proxy] run failed with error: %s", p.runError)
+		self.runError = self.run()
+		if self.runError != nil {
+			log.Printf("[Proxy] run failed with error: %s", self.runError)
 		}
-		close(p.stopped)
+		close(self.stopped)
 	}()
 }
 
-func (p *GRPCServer) run() error {
-	p.server = grpc.NewServer(grpc.UnknownServiceHandler(p.onConnectionAccepted))
-	p.server.RegisterService(&grpc.ServiceDesc{
+func (self *GRPCServer) run() error {
+	self.server = grpc.NewServer(grpc.UnknownServiceHandler(self.onConnectionAccepted))
+	self.server.RegisterService(&grpc.ServiceDesc{
 		ServiceName: "DummyService",
 		HandlerType: (*any)(nil),
 	}, nil)
 
-	err := p.server.Serve(p.listener)
+	err := self.server.Serve(self.listener)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *GRPCServer) Stop() {
-	if p.listener != nil {
-		p.listener.Close()
-		p.listener = nil
+func (self *GRPCServer) Stop() {
+	if self.listener != nil {
+		self.listener.Close()
+		self.listener = nil
 	}
 }
 
-func (p *GRPCServer) Wait() error {
-	if p.stopped != nil {
-		<-p.stopped
+func (self *GRPCServer) Wait() error {
+	if self.stopped != nil {
+		<-self.stopped
 	}
-	return p.runError
+	return self.runError
 }
 
-func (p *GRPCServer) onConnectionAccepted(_ any, protoServer grpc.ServerStream) error {
+func (self *GRPCServer) onConnectionAccepted(_ any, protoServer grpc.ServerStream) error {
 	ctx := protoServer.Context()
 
 	method, hasName := grpc.MethodFromServerStream(protoServer)
 	if !hasName {
 		return status.Errorf(codes.NotFound, "Method name could not be determined")
 	}
-	p.Logger.Printf("Handling method %s", method)
-	defer p.Logger.Printf("Done handling method %s", method)
+	self.Logger.Printf("Handling method %s", method)
+	defer self.Logger.Printf("Done handling method %s", method)
 
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
 	serverStream := InOutStream(StreamFromProtobuf(protoServer))
 	// serverObservable := ObservableFromStream(ctx, server)
 
-	return p.ConnectionHandler.HandleConnection(ctx, method, serverStream)
+	return self.ConnectionHandler.HandleConnection(ctx, method, serverStream)
 }
