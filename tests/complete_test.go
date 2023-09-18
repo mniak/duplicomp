@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -72,15 +71,14 @@ func TestComplete(t *testing.T) {
 
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
+	mockShadowLogger := NewMockShadowLogger(ctrl)
 	go func() {
 		mainLogger.Println("Starting gateway")
 		gateway.RunGateway(ctx, gateway.GatewayParams{
-			ListenPort:    GATEWAY_PORT,
-			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
-			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
-			ComparisonLogger: gateway.LogComparisonLogger{
-				Logger: log.Default(),
-			},
+			ListenPort:       GATEWAY_PORT,
+			PrimaryTarget:    fmt.Sprintf(":%d", PRIMARY_PORT),
+			ShadowTarget:     fmt.Sprintf(":%d", SHADOW_PORT),
+			ComparisonLogger: mockShadowLogger,
 		})
 	}()
 
