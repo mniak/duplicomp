@@ -17,9 +17,9 @@ import (
 )
 
 func TestComplete(t *testing.T) {
-	const PRIMARY_PORT = 9999
-	const SHADOW_PORT = 8888
-	const GATEWAY_PORT = 9000
+	PRIMARY_PORT := gofakeit.IntRange(63000, 65000)
+	SHADOW_PORT := PRIMARY_PORT + 1
+	GATEWAY_PORT := PRIMARY_PORT + 2
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -71,14 +71,14 @@ func TestComplete(t *testing.T) {
 
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
-	mockShadowLogger := NewMockShadowLogger(ctrl)
+	mockComparator := NewMockComparator(ctrl)
 	go func() {
 		mainLogger.Println("Starting gateway")
 		gateway.RunGateway(ctx, gateway.GatewayParams{
-			ListenPort:       GATEWAY_PORT,
-			PrimaryTarget:    fmt.Sprintf(":%d", PRIMARY_PORT),
-			ShadowTarget:     fmt.Sprintf(":%d", SHADOW_PORT),
-			ComparisonLogger: mockShadowLogger,
+			ListenAddress: fmt.Sprintf(":%d", GATEWAY_PORT),
+			PrimaryTarget: fmt.Sprintf(":%d", PRIMARY_PORT),
+			ShadowTarget:  fmt.Sprintf(":%d", SHADOW_PORT),
+			Comparator:    mockComparator,
 		})
 	}()
 

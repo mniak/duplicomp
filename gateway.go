@@ -2,17 +2,18 @@ package duplicomp
 
 import (
 	"context"
-	"fmt"
+	"net"
 
+	"github.com/mniak/duplicomp/internal/noop"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GatewayParams struct {
-	ListenPort       int
-	PrimaryTarget    string
-	ShadowTarget     string
-	ComparisonLogger ShadowLogger
+	ListenPort    int
+	PrimaryTarget string
+	ShadowTarget  string
+	Comparator    Comparator
 }
 
 type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
@@ -22,17 +23,16 @@ func (lch LambdaConnectionHandler) HandleConnection(ctx context.Context, method 
 }
 
 type Gateway struct {
-	ListenPort        int
+	Listener          net.Listener
 	PrimaryConnection TargetConnection
 	ShadowConnection  TargetConnection
-	ComparisonLogger  ShadowLogger
+	Comparator        Comparator
 
 	grpcServer GRPCServer
 }
 
 func (gw *Gateway) Start(ctx context.Context) error {
 	gw.grpcServer = GRPCServer{
-		ListenAddress: fmt.Sprintf(":%d", gw.ListenPort),
 		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, method string, serverStream Stream) error {
 			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, method)
 			if err != nil {
@@ -47,7 +47,7 @@ func (gw *Gateway) Start(ctx context.Context) error {
 			dualStream := StreamWithShadow{
 				Primary: primaryUpstream,
 				Shadow:  shadowUpstream,
-				Logger:  gw.ComparisonLogger,
+				Logger:  noop.Logger(),
 			}
 
 			fwd := Forwarder{
@@ -58,7 +58,7 @@ func (gw *Gateway) Start(ctx context.Context) error {
 		}),
 	}
 
-	err := gw.grpcServer.Start()
+	err := gw.grpcServer.StartWithListener(gw.Listener)
 	return err
 }
 

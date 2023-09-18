@@ -17,10 +17,8 @@ type ConnectionHandler interface {
 }
 
 type GRPCServer struct {
-	ListenAddress     string
 	ConnectionHandler ConnectionHandler
-
-	Logger log2.Logger
+	Logger            log2.Logger
 
 	listener net.Listener
 	runError error
@@ -35,15 +33,18 @@ func (p *GRPCServer) init() {
 	p.stopped = make(chan struct{})
 }
 
-func (p *GRPCServer) Start() error {
-	p.init()
-
+func (p *GRPCServer) Start(addr string) error {
 	var err error
-	p.listener, err = net.Listen("tcp", p.ListenAddress)
+	p.listener, err = net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
+	return p.StartWithListener(p.listener)
+}
 
+func (p *GRPCServer) StartWithListener(lis net.Listener) error {
+	p.init()
+	p.listener = lis
 	p.runAsync()
 	return nil
 }

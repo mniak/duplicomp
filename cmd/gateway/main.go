@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var params gateway.GatewayParams
-	flag.IntVar(&params.ListenPort, "listen-port", 9091, "TCP port to listen")
+	flag.StringVar(&params.ListenAddress, "listen-address", ":9091", "TCP address to listen")
 	flag.StringVar(&params.PrimaryTarget, "target", ":9001", "Connection target")
 	flag.StringVar(&params.ShadowTarget, "shadow-target", "", "Shadow connection target")
 	flag.Parse()

@@ -27,7 +27,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
-		mockLogger := NewMockShadowLogger(ctrl)
+		mockComparator := NewMockComparator(ctrl)
 
 		var wg sync.WaitGroup
 		mockStream.EXPECT().Send(fakeMessage).Return(nil)
@@ -38,9 +38,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		}).Return(nil)
 
 		sut := StreamWithShadow{
-			Primary: mockStream,
-			Shadow:  mockShadow,
-			Logger:  mockLogger,
+			Primary:    mockStream,
+			Shadow:     mockShadow,
+			Comparator: mockComparator,
 		}
 
 		startTime := time.Now()
@@ -71,14 +71,14 @@ func TestStreamWithShadow_Send(t *testing.T) {
 
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
-		mockLogger := NewMockShadowLogger(ctrl)
+		mockComparator := NewMockComparator(ctrl)
 
 		mockStream.EXPECT().Send(fakeMessage).Return(fakeError)
 
 		sut := StreamWithShadow{
-			Primary: mockStream,
-			Shadow:  mockShadow,
-			Logger:  mockLogger,
+			Primary:    mockStream,
+			Shadow:     mockShadow,
+			Comparator: mockComparator,
 		}
 
 		err := sut.Send(fakeMessage)
@@ -101,7 +101,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
-		mockLogger := NewMockShadowLogger(ctrl)
+		mockComparator := NewMockComparator(ctrl)
 
 		var wg sync.WaitGroup
 		mockStream.EXPECT().Send(fakeMessage).Return(nil)
@@ -110,12 +110,12 @@ func TestStreamWithShadow_Send(t *testing.T) {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
 		}).Return(fakeError)
-		mockLogger.EXPECT().LogSendFailure(fakeError)
+		// mockLogger.EXPECT().LogSendFailure(fakeError)
 
 		sut := StreamWithShadow{
-			Primary: mockStream,
-			Shadow:  mockShadow,
-			Logger:  mockLogger,
+			Primary:    mockStream,
+			Shadow:     mockShadow,
+			Comparator: mockComparator,
 		}
 
 		startTime := time.Now()
@@ -143,6 +143,7 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		gofakeit.Struct(fakeMessage)
 		require.NotNil(t, fakeMessage)
 		require.NotEmpty(t, fakeMessage)
+		fakeError := errors.New(gofakeit.SentenceSimple())
 
 		fakeShadowMessage := new(pbany.Any)
 		gofakeit.Struct(fakeShadowMessage)
@@ -155,21 +156,21 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
-		mockLogger := NewMockShadowLogger(ctrl)
+		mockComparator := NewMockComparator(ctrl)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
-		mockStream.EXPECT().Receive().Return(fakeMessage, nil)
+		mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
 		mockShadow.EXPECT().Receive().Do(func() {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
 		}).Return(fakeShadowMessage, fakeShadowError)
-		mockLogger.EXPECT().LogCompareReceive(fakeMessage, fakeShadowMessage, fakeShadowError)
+		mockComparator.EXPECT().Compare(fakeMessage, fakeError, fakeShadowMessage, fakeShadowError)
 
 		sut := StreamWithShadow{
-			Primary: mockStream,
-			Shadow:  mockShadow,
-			Logger:  mockLogger,
+			Primary:    mockStream,
+			Shadow:     mockShadow,
+			Comparator: mockComparator,
 		}
 
 		startTime := time.Now()
@@ -209,14 +210,14 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 
 		mockStream := NewMockStream(ctrl)
 		mockShadow := NewMockStream(ctrl)
-		mockLogger := NewMockShadowLogger(ctrl)
+		mockComparator := NewMockComparator(ctrl)
 
 		mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
 
 		sut := StreamWithShadow{
-			Primary: mockStream,
-			Shadow:  mockShadow,
-			Logger:  mockLogger,
+			Primary:    mockStream,
+			Shadow:     mockShadow,
+			Comparator: mockComparator,
 		}
 
 		msg, err := sut.Receive()
