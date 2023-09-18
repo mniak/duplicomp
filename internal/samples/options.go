@@ -30,7 +30,7 @@ func WithPort(port int) _Option {
 
 func WithName(name string) _Option {
 	return func(o *_Options) {
-		o.Logger = log.New(os.Stdout, fmt.Sprintf("[%s] ", name), 0)
+		o.Logger = log.New(os.Stdout, fmt.Sprintf("[%s] ", name), log.LstdFlags)
 	}
 }
 

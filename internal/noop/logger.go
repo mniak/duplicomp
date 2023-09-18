@@ -8,5 +8,5 @@ import (
 )
 
 func Logger() log2.Logger {
-	return log.New(io.Discard, "", 0)
+	return log.New(io.Discard, "", log.LstdFlags)
 }

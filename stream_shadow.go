@@ -11,21 +11,21 @@ type ShadowLogger interface {
 }
 
 type StreamWithShadow struct {
-	inner  Stream
-	shadow Stream
-	logger ShadowLogger
+	Primary Stream
+	Shadow  Stream
+	Logger  ShadowLogger
 }
 
 func (fs *StreamWithShadow) Send(m proto.Message) error {
-	err := fs.inner.Send(m)
+	err := fs.Primary.Send(m)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		err := fs.shadow.Send(m)
+		err := fs.Shadow.Send(m)
 		if err != nil {
-			fs.logger.LogSendFailure(err)
+			fs.Logger.LogSendFailure(err)
 		}
 	}()
 
@@ -33,14 +33,14 @@ func (fs *StreamWithShadow) Send(m proto.Message) error {
 }
 
 func (fs *StreamWithShadow) Receive() (proto.Message, error) {
-	msg, err := fs.inner.Receive()
+	msg, err := fs.Primary.Receive()
 	if err != nil {
 		return msg, err
 	}
 
 	go func() {
-		shadowMsg, shadowErr := fs.shadow.Receive()
-		fs.logger.LogCompareReceive(msg, shadowMsg, shadowErr)
+		shadowMsg, shadowErr := fs.Shadow.Receive()
+		fs.Logger.LogCompareReceive(msg, shadowMsg, shadowErr)
 	}()
 
 	return msg, nil

@@ -38,9 +38,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		}).Return(nil)
 
 		sut := StreamWithShadow{
-			inner:  mockStream,
-			shadow: mockShadow,
-			logger: mockLogger,
+			Primary: mockStream,
+			Shadow:  mockShadow,
+			Logger:  mockLogger,
 		}
 
 		startTime := time.Now()
@@ -76,9 +76,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		mockStream.EXPECT().Send(fakeMessage).Return(fakeError)
 
 		sut := StreamWithShadow{
-			inner:  mockStream,
-			shadow: mockShadow,
-			logger: mockLogger,
+			Primary: mockStream,
+			Shadow:  mockShadow,
+			Logger:  mockLogger,
 		}
 
 		err := sut.Send(fakeMessage)
@@ -113,9 +113,9 @@ func TestStreamWithShadow_Send(t *testing.T) {
 		mockLogger.EXPECT().LogSendFailure(fakeError)
 
 		sut := StreamWithShadow{
-			inner:  mockStream,
-			shadow: mockShadow,
-			logger: mockLogger,
+			Primary: mockStream,
+			Shadow:  mockShadow,
+			Logger:  mockLogger,
 		}
 
 		startTime := time.Now()
@@ -167,9 +167,9 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		mockLogger.EXPECT().LogCompareReceive(fakeMessage, fakeShadowMessage, fakeShadowError)
 
 		sut := StreamWithShadow{
-			inner:  mockStream,
-			shadow: mockShadow,
-			logger: mockLogger,
+			Primary: mockStream,
+			Shadow:  mockShadow,
+			Logger:  mockLogger,
 		}
 
 		startTime := time.Now()
@@ -214,9 +214,9 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 		mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
 
 		sut := StreamWithShadow{
-			inner:  mockStream,
-			shadow: mockShadow,
-			logger: mockLogger,
+			Primary: mockStream,
+			Shadow:  mockShadow,
+			Logger:  mockLogger,
 		}
 
 		msg, err := sut.Receive()

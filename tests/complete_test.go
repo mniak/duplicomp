@@ -61,7 +61,7 @@ func TestComplete(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, ping *grpc.Ping) (*grpc.Pong, error) {
 			require.Equal(t, fakePingMessage, *ping.Message)
 			return &fakeShadowPong, nil
-		}).Times(0)
+		})
 	secondary, err := samples.RunServer(
 		samples.WithLogger(log2.Sub(rootLogger, "SHAD ")),
 		samples.WithPort(SHADOW_PORT),
@@ -88,6 +88,7 @@ func TestComplete(t *testing.T) {
 		samples.WithLogger(log2.Sub(rootLogger, "CLIE ")),
 		samples.WithPort(GATEWAY_PORT),
 	)
+	time.Sleep(1 * time.Second)
 	require.NoError(t, err)
 	require.Equal(t, fakePrimaryPong.Reply, pong.Reply)
 	require.Equal(t, fakePrimaryPong.ServedBy, pong.ServedBy)

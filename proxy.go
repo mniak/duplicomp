@@ -27,7 +27,7 @@ type Proxy interface {
 // }
 
 // func (p *GRPCServer) LoggingToWithPrefix(w io.Writer, prefix string) *GRPCServer {
-// 	p.logger = log.New(w, prefix, 0)
+// 	p.logger = log.New(w, prefix, log.LstdFlags)
 // 	return p
 // }
 
