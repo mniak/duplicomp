@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.23.1
+	github.com/elliotchance/orderedmap/v2 v2.2.0
 	github.com/golang/protobuf v1.5.3
 	github.com/reactivex/rxgo/v2 v2.5.0
 	github.com/samber/lo v1.38.1
