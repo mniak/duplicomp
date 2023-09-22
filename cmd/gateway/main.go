@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"syscall"
 
 	"github.com/mniak/duplicomp"
+	"github.com/mniak/duplicomp/log2"
 )
 
 func main() {
@@ -17,7 +19,9 @@ func main() {
 	flag.StringVar(&shadowTarget, "shadow-target", "", "Shadow connection target")
 	flag.Parse()
 
-	cmp := LogComparator{}
+	cmp := LogComparator{
+		logger: log2.Sub(log2.FromWriter(os.Stdout), "[Comparator] "),
+	}
 
 	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget, cmp)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/mniak/duplicomp/internal/noop"
 	"github.com/mniak/duplicomp/log2"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -51,10 +52,18 @@ func (self *StreamWithShadow) Receive() (proto.Message, error) {
 
 	go func() {
 		shadowMsg, shadowErr := self.Shadow.Receive()
-		self.Comparator.Compare(
-			msg, err,
-			shadowMsg, shadowErr,
+
+		msgBytes := msg.ProtoReflect().GetUnknown()
+		shadowMsgBytes := shadowMsg.ProtoReflect().GetUnknown()
+
+		compareError := self.Comparator.Compare(
+			msgBytes, err,
+			shadowMsgBytes, shadowErr,
 		)
+
+		if compareError != nil {
+			self.Logger.Println(errors.WithMessage(compareError, "comparison failed"))
+		}
 	}()
 
 	return msg, err

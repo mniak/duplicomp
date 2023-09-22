@@ -1,7 +1,5 @@
 package noop
 
-import "google.golang.org/protobuf/proto"
-
 func Comparator() _NoOpComparator {
 	return _NoOpComparator{}
 }
@@ -9,7 +7,8 @@ func Comparator() _NoOpComparator {
 type _NoOpComparator struct{}
 
 func (_NoOpComparator) Compare(
-	msg1 proto.Message, err1 error,
-	msg2 proto.Message, err2 error,
-) {
+	msg1 []byte, err1 error,
+	msg2 []byte, err2 error,
+) error {
+	return nil
 }

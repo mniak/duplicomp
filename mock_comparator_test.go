@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // MockComparator is a mock of Comparator interface.
@@ -35,9 +34,11 @@ func (m *MockComparator) EXPECT() *MockComparatorMockRecorder {
 }
 
 // Compare mocks base method.
-func (m *MockComparator) Compare(arg0 protoreflect.ProtoMessage, arg1 error, arg2 protoreflect.ProtoMessage, arg3 error) {
+func (m *MockComparator) Compare(arg0 []byte, arg1 error, arg2 []byte, arg3 error) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Compare", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Compare", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Compare indicates an expected call of Compare.

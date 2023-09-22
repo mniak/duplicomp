@@ -7,6 +7,7 @@ import (
 
 	"github.com/mniak/duplicomp/log2"
 	"google.golang.org/grpc"
+
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -20,6 +21,7 @@ type GatewayParams struct {
 type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
 
 func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
+
 	return h(ctx, method, serverStream)
 }
 

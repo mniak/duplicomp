@@ -12,7 +12,7 @@ import (
 type ProtoType string
 
 const (
-	TypeBytes   ProtoType = "bytes"
+	TypeBytes   ProtoType = "len"
 	TypeVarint  ProtoType = "varint"
 	TypeFixed32 ProtoType = "fixed32"
 	TypeFixed64 ProtoType = "fixed64"
@@ -113,4 +113,44 @@ func parseProtoBytes(b []byte) (*ProtoMap, error) {
 		b = b[n:]
 	}
 	return (*ProtoMap)(result), nil
+}
+
+type (
+	ProtoHintMap  = map[int]ProtoDataHint
+	ProtoDataHint struct {
+		Name      string
+		SubFields map[int]ProtoDataHint
+	}
+)
+
+func PrintProtoWithHint(m proto.Message, hints ProtoHintMap) error {
+	// var sb strings.Builder
+
+	rootMap, err := ParseProtoMessage(m)
+	if err != nil {
+		return err
+	}
+
+	for _, number := range rootMap.Keys() {
+		fmt.Printf("Field %d ", number)
+		field, _ := rootMap.Get(number)
+		hint, ok := hints[number]
+		if ok {
+			fmt.Printf("has hint %q ", hint.Name)
+			switch {
+			case field.Type == TypeBytes && hint.SubFields != nil:
+				fmt.Printf("with subfields\n")
+				protowire.ConsumeFixed32(field.Bytes)
+				// for sfk, sfv := range hint.SubFields {
+				// }
+			default:
+				fmt.Printf("but the hint is unknown: %+v\n", hint)
+			}
+		} else {
+			fmt.Printf("without hint. value=%s\n", field.String())
+		}
+	}
+
+	// return sb.String(), nil
+	return nil
 }
