@@ -53,21 +53,21 @@ func zigzag(v int64) uint64 {
 	}
 }
 
-func onescomp(v int64) uint64 {
+func twosComplement(v int64) uint64 {
 	return uint64(v)
 }
-
-// func sint32(v int) int32 {
-// 	return int32(onescomp(v))
-// }
 
 func TestParseProto_Example2(t *testing.T) {
 	ex := LoadExample("Integers")
 	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
 
+	// Pay attention because each integer type represent negatives differently.
+	// intN and sfixedN uses two's-complement encoding
+	// sintN and sfixedN uses zigzag encoding
+	// https://protobuf.dev/programming-guides/encoding/#signed-ints
 	expected := []IndexedProtoValue{
-		// intN uses ones-compement for negative numbers
+		// intN uses two's-compement for negative numbers
 		{
 			Index: 1,
 			ProtoValue: ProtoValue{
@@ -79,7 +79,7 @@ func TestParseProto_Example2(t *testing.T) {
 			Index: 101,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: onescomp(-42),
+				Varint: twosComplement(-42),
 			},
 		},
 		{
@@ -93,7 +93,7 @@ func TestParseProto_Example2(t *testing.T) {
 			Index: 102,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: onescomp(-1234567890123456789),
+				Varint: twosComplement(-1234567890123456789),
 			},
 		},
 		// uintN does not use negative, so they dont need encoding
@@ -111,48 +111,51 @@ func TestParseProto_Example2(t *testing.T) {
 				Varint: 98765432109876543,
 			},
 		},
-		// {
-		// 	Index: 5,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(-12345),
-		// 	},
-		// },
-		// {
-		// 	Index: 6,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(-98765432109876543),
-		// 	},
-		// },
-		// {
-		// 	Index: 7,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed32,
-		// 		Fixed32: 123456789,
-		// 	},
-		// },
-		// {
-		// 	Index: 8,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed64,
-		// 		Fixed64: 987654321012345678,
-		// 	},
-		// },
+		// sintN uses zig zag for negative numbers
+		{
+			Index: 5,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(-12345),
+			},
+		},
+		{
+			Index: 6,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(-98765432109876543),
+			},
+		},
+		// fixedN does not have negative numbers
+		{
+			Index: 7,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: 123456789,
+			},
+		},
+		{
+			Index: 8,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: 987654321012345678,
+			},
+		},
+		// sfixedN uses two's complement for negative numbers
 		{
 			Index: 9,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed32,
-				Fixed32: uint32(onescomp(-123456789)),
+				Fixed32: uint32(twosComplement(-123456789)),
 			},
 		},
-		// {
-		// 	Index: 10,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed64,
-		// 		Fixed64: zigzag(-987654321012345678),
-		// 	},
-		// },
+		{
+			Index: 10,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: twosComplement(-987654321012345678),
+			},
+		},
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
