@@ -96,20 +96,21 @@ func TestParseProto_Example2(t *testing.T) {
 				Varint: onescomp(-1234567890123456789),
 			},
 		},
-		// {
-		// 	Index: 3,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(12345),
-		// 	},
-		// },
-		// {
-		// 	Index: 4,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(98765432109876543),
-		// 	},
-		// },
+		// uintN does not use negative, so they dont need encoding
+		{
+			Index: 3,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 12345,
+			},
+		},
+		{
+			Index: 4,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 98765432109876543,
+			},
+		},
 		// {
 		// 	Index: 5,
 		// 	ProtoValue: ProtoValue{
