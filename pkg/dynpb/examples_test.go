@@ -1,7 +1,12 @@
 package dynpb
 
 import (
+	"embed"
 	_ "embed"
+	"io"
+	"path/filepath"
+
+	"github.com/samber/lo"
 )
 
 type Example struct {
@@ -10,32 +15,35 @@ type Example struct {
 	ProtoFile []byte
 }
 
-//go:embed examples/1/bytes.bin
-var __example1_Bytes []byte
+//go:embed examples/*/*
+var __examplesFS embed.FS
 
-//go:embed examples/1/data.txt
-var __example1_Data []byte
+func LoadExample(name string) Example {
+	bytesFile := lo.Must(__examplesFS.Open(filepath.Join("examples", name, "bytes.bin")))
+	bytes := lo.Must(io.ReadAll(bytesFile))
 
-//go:embed examples/1/types.proto
-var __example1_TypesProto []byte
+	dataFile := lo.Must(__examplesFS.Open(filepath.Join("examples", name, "data.txt")))
+	data := lo.Must(io.ReadAll(dataFile))
 
-var example1 = Example{
-	Bytes:     __example1_Bytes,
-	Data:      __example1_Data,
-	ProtoFile: __example1_TypesProto,
+	protoFile := lo.Must(__examplesFS.Open(filepath.Join("examples", name, "types.proto")))
+	proto := lo.Must(io.ReadAll(protoFile))
+
+	return Example{
+		Bytes:     bytes,
+		Data:      data,
+		ProtoFile: proto,
+	}
 }
 
-//go:embed examples/2/bytes.bin
-var __example2_Bytes []byte
+func AllExamples() []Example {
+	dir := lo.Must(__examplesFS.ReadDir("examples"))
+	var result []Example
+	for _, entry := range dir {
+		if !entry.IsDir() {
+			continue
+		}
 
-//go:embed examples/2/data.txt
-var __example2_Data []byte
-
-//go:embed examples/2/types.proto
-var __example2_TypesProto []byte
-
-var example2 = Example{
-	Bytes:     __example2_Bytes,
-	Data:      __example2_Data,
-	ProtoFile: __example2_TypesProto,
+		result = append(result, LoadExample(filepath.Base(entry.Name())))
+	}
+	return result
 }

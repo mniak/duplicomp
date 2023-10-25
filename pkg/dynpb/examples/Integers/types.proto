@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+message Object {
+  optional int32 field_int32 = 1;
+  optional int64 field_int64 = 2;
+  optional uint32 field_uint32 = 3;
+  optional uint64 field_uint64 = 4;
+  optional sint32 field_sint32 = 5;
+  optional sint64 field_sint64 = 6;
+  optional fixed32 field_fixed32 = 7;
+  optional fixed64 field_fixed64 = 8;
+  optional sfixed32 field_sfixed32 = 9;
+  optional sfixed64 field_sfixed64 = 10;
+  optional float field_float = 11;
+  optional double field_double = 12;
+  optional bool field_bool = 13;
+  optional string field_string = 14;
+  optional bytes field_bytes = 15;
+ 
+  repeated int32 field_int32_list = 16;
+  repeated int64 field_int64_list = 17;
+  repeated uint32 field_uint32_list = 18;
+  repeated uint64 field_uint64_list = 19;
+  repeated sint32 field_sint32_list = 20;
+  repeated sint64 field_sint64_list = 21;
+  repeated fixed32 field_fixed32_list = 22;
+  repeated fixed64 field_fixed64_list = 23;
+  repeated sfixed32 field_sfixed32_list = 24;
+  repeated sfixed64 field_sfixed64_list = 25;
+  repeated float field_float_list = 26;
+  repeated double field_double_list = 27;
+  repeated bool field_bool_list = 28;
+  repeated string field_string_list = 29;
+  repeated bytes field_bytes_list = 30;
+  
+  optional Object field_object = 31;
+  repeated Object field_object_list = 32;
+}

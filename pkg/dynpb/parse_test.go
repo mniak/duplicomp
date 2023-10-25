@@ -46,7 +46,8 @@ func f32(n float32) uint64 {
 }
 
 func TestParseProto_Example1(t *testing.T) {
-	parsed, err := parseProtoBytes(example1.Bytes)
+	ex := LoadExample("Basic")
+	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
 
 	expected := []IndexedProtoValue{
@@ -69,7 +70,8 @@ func TestParseProto_Example1(t *testing.T) {
 }
 
 func TestParseProto_Example2(t *testing.T) {
-	parsed, err := parseProtoBytes(example2.Bytes)
+	ex := LoadExample("Integers")
+	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
 
 	expected := []IndexedProtoValue{
@@ -178,25 +180,6 @@ func TestParseProto_Example2(t *testing.T) {
 				Bytes: lo.Must(base64.StdEncoding.DecodeString("SGVsbG8sIHdvcmxkIQ==")),
 			},
 		},
-
-		// repeated int32 field_int32_list = 16;
-		// repeated int64 field_int64_list = 17;
-		// repeated uint32 field_uint32_list = 18;
-		// repeated uint64 field_uint64_list = 19;
-		// repeated sint32 field_sint32_list = 20;
-		// repeated sint64 field_sint64_list = 21;
-		// repeated fixed32 field_fixed32_list = 22;
-		// repeated fixed64 field_fixed64_list = 23;
-		// repeated sfixed32 field_sfixed32_list = 24;
-		// repeated sfixed64 field_sfixed64_list = 25;
-		// repeated float field_float_list = 26;
-		// repeated double field_double_list = 27;
-		// repeated bool field_bool_list = 28;
-		// repeated string field_string_list = 29;
-		// repeated bytes field_bytes_list = 30;
-
-		// optional Object field_object = 31;
-		// repeated Object field_object_list = 32;
 	}
 	assert.Equal(t, expected, parsed)
 }
