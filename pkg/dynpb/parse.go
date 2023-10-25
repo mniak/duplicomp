@@ -1,4 +1,4 @@
-package dynproto
+package dynpb
 
 import (
 	"errors"
