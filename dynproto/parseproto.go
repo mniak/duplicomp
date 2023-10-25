@@ -1,0 +1,194 @@
+package dynproto
+
+import (
+	"errors"
+	"fmt"
+	"unicode/utf8"
+
+	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/proto"
+)
+
+type ProtoType string
+
+const (
+	TypeBytes   ProtoType = "len"
+	TypeVarint  ProtoType = "varint"
+	TypeFixed32 ProtoType = "fixed32"
+	TypeFixed64 ProtoType = "fixed64"
+	TypeGroup   ProtoType = "group"
+)
+
+type ProtoValue struct {
+	Type ProtoType
+
+	Bytes   []byte
+	Varint  uint64
+	Fixed32 uint32
+	Fixed64 uint64
+	Group   []IndexedProtoValue
+}
+
+func (v ProtoValue) String() string {
+	switch v.Type {
+	case TypeBytes:
+		if utf8.Valid(v.Bytes) {
+			return fmt.Sprintf("%q", string(v.Bytes))
+		}
+		return fmt.Sprintf("%2X", v.Bytes)
+	case TypeVarint:
+		return fmt.Sprint(v.Varint)
+	case TypeFixed32:
+		return fmt.Sprint(v.Fixed32)
+	case TypeFixed64:
+		return fmt.Sprint(v.Fixed64)
+	case TypeGroup:
+		return "<group>"
+
+	default:
+		return "<invalid type>"
+	}
+}
+
+type (
+	ProtoMap          = []IndexedProtoValue
+	IndexedProtoValue struct {
+		Index int
+		ProtoValue
+	}
+)
+
+func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
+	unknownBytes := m.ProtoReflect().GetUnknown()
+	fields, err := parseProtoBytes(unknownBytes)
+	return fields, err
+}
+
+func parseProtoBytes(b []byte) (ProtoMap, error) {
+	var result ProtoMap
+	const dec = 10
+	const hex = 16
+	for len(b) > 0 {
+		num, wtype, length := protowire.ConsumeTag(b)
+		if length < 0 {
+			return nil, errors.New("failed to consume tag")
+		}
+		b = b[length:]
+
+		switch wtype {
+		case protowire.VarintType:
+			var v uint64
+			v, length = protowire.ConsumeVarint(b)
+			if length < 0 {
+				return nil, fmt.Errorf("failed to parse varint %d: %s", num, protowire.ParseError(length))
+			}
+			result = append(result, IndexedProtoValue{
+				Index: int(num),
+				ProtoValue: ProtoValue{
+					Type:   TypeVarint,
+					Varint: v,
+				},
+			})
+		case protowire.Fixed32Type:
+			var v uint32
+			v, length = protowire.ConsumeFixed32(b)
+			if length < 0 {
+				return nil, fmt.Errorf("failed to parse fixed32 %d: %s", num, protowire.ParseError(length))
+			}
+			result = append(result, IndexedProtoValue{
+				Index: int(num),
+				ProtoValue: ProtoValue{
+					Type:    TypeFixed32,
+					Fixed32: v,
+				},
+			})
+		case protowire.Fixed64Type:
+			var v uint64
+			v, length = protowire.ConsumeFixed64(b)
+			if length < 0 {
+				return nil, fmt.Errorf("failed to parse fixed64 %d: %s", num, protowire.ParseError(length))
+			}
+			result = append(result, IndexedProtoValue{
+				Index: int(num),
+				ProtoValue: ProtoValue{
+					Type:    TypeFixed64,
+					Fixed64: v,
+				},
+			})
+		case protowire.BytesType:
+			var v []byte
+			v, length = protowire.ConsumeBytes(b)
+			if length < 0 {
+				return nil, fmt.Errorf("failed to parse bytes %d: %s", num, protowire.ParseError(length))
+			}
+			result = append(result, IndexedProtoValue{
+				Index: int(num),
+				ProtoValue: ProtoValue{
+					Type:  TypeBytes,
+					Bytes: v,
+				},
+			})
+		case protowire.StartGroupType:
+			var g []byte
+			g, length = protowire.ConsumeGroup(num, b)
+			if length < 0 {
+				return nil, fmt.Errorf("failed to parse group %d: %s", num, protowire.ParseError(length))
+			}
+			v, err := parseProtoBytes(g)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, IndexedProtoValue{
+				Index: int(num),
+				ProtoValue: ProtoValue{
+					Type:  TypeGroup,
+					Group: v,
+				},
+			})
+		default:
+			return nil, fmt.Errorf("error parsing unknown field wire type: %v", wtype)
+		}
+
+		b = b[length:]
+	}
+	return result, nil
+}
+
+type (
+	ProtoHintMap  = map[int]ProtoDataHint
+	ProtoDataHint struct {
+		Name      string
+		SubFields map[int]ProtoDataHint
+	}
+)
+
+func PrintProtoWithHint(m proto.Message, hints ProtoHintMap) error {
+	// var sb strings.Builder
+
+	fields, err := ParseProtoMessage(m)
+	if err != nil {
+		return err
+	}
+
+	for _, field := range fields {
+		fmt.Printf("Field %d ", field.Index)
+		hint, ok := hints[field.Index]
+		if ok {
+			fmt.Printf("has hint %q ", hint.Name)
+			switch {
+			case field.Type == TypeBytes && hint.SubFields != nil:
+				fmt.Printf("with subfields\n")
+				protowire.ConsumeFixed32(field.Bytes)
+				// for sfk, sfv := range hint.SubFields {
+				// }
+			default:
+				fmt.Printf("but the hint is unknown: %+v\n", hint)
+			}
+		} else {
+			fmt.Printf("without hint. value=%s\n", field.String())
+		}
+	}
+
+	// return sb.String(), nil
+	return nil
+}
