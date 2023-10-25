@@ -45,18 +45,6 @@ func TestParseProto_Example1(t *testing.T) {
 	assert.Equal(t, expected, parsed)
 }
 
-func zigzag(v int64) uint64 {
-	if v >= 0 {
-		return uint64(v * 2)
-	} else {
-		return uint64(v*-2 - 1)
-	}
-}
-
-func twosComplement(v int64) uint64 {
-	return uint64(v)
-}
-
 func TestParseProto_Example2(t *testing.T) {
 	ex := LoadExample("Integers")
 	parsed, err := parseProtoBytes(ex.Bytes)
@@ -172,4 +160,16 @@ func TestParseProto_Example2(t *testing.T) {
 	}
 
 	// assert.Equal(t, expected, parsed)
+}
+
+func zigzag(v int64) uint64 {
+	if v >= 0 {
+		return uint64(v * 2)
+	} else {
+		return uint64(v*-2 - 1)
+	}
+}
+
+func twosComplement(v int64) uint64 {
+	return uint64(v)
 }

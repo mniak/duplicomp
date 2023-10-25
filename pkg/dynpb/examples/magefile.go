@@ -10,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func GenerateExamples() {
+func Build() {
 	dir := lo.Must(os.ReadDir("."))
 	for _, entry := range dir {
 		if !entry.IsDir() {
