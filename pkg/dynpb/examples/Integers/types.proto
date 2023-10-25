@@ -1,8 +1,10 @@
 syntax = "proto3";
 
 message Object {
-  optional int32 field_int32 = 1;
-  optional int64 field_int64 = 2;
+  optional int32 field_int32_pos = 1;
+  optional int32 field_int32_neg = 101;
+  optional int64 field_int64_pos = 2;
+  optional int64 field_int64_neg = 102;
   optional uint32 field_uint32 = 3;
   optional uint64 field_uint64 = 4;
   optional sint32 field_sint32 = 5;

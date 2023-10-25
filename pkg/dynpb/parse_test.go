@@ -67,20 +67,35 @@ func TestParseProto_Example2(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := []IndexedProtoValue{
-		// {
-		// 	Index: 1,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: 42,
-		// 	},
-		// },
-		// {
-		// 	Index: 2,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(1234567890123456789),
-		// 	},
-		// },
+		// intN uses ones-compement for negative numbers
+		{
+			Index: 1,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 42,
+			},
+		},
+		{
+			Index: 101,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: onescomp(-42),
+			},
+		},
+		{
+			Index: 2,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 1234567890123456789,
+			},
+		},
+		{
+			Index: 102,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: onescomp(-1234567890123456789),
+			},
+		},
 		// {
 		// 	Index: 3,
 		// 	ProtoValue: ProtoValue{
