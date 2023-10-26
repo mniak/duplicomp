@@ -128,36 +128,36 @@ func TestParseProto_Example2(t *testing.T) {
 				Varint: zigzag(-98765432109876543),
 			},
 		},
-		// // fixedN does not have negative numbers
-		// {
-		// 	Index: 7,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed32,
-		// 		Fixed32: 123456789,
-		// 	},
-		// },
-		// {
-		// 	Index: 8,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed64,
-		// 		Fixed64: 987654321012345678,
-		// 	},
-		// },
-		// // sfixedN uses two's complement for negative numbers
-		// {
-		// 	Index: 9,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed32,
-		// 		Fixed32: uint32(twosComplement(-123456789)),
-		// 	},
-		// },
-		// {
-		// 	Index: 10,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed64,
-		// 		Fixed64: twosComplement(-987654321012345678),
-		// 	},
-		// },
+		// fixedN does not have negative numbers
+		{
+			Index: 11,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: 123456789,
+			},
+		},
+		{
+			Index: 12,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: 987654321012345678,
+			},
+		},
+		// sfixedN uses two's complement for negative numbers
+		{
+			Index: 13,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: uint32(twosComplement(123456789)),
+			},
+		},
+		{
+			Index: 14,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: uint32(twosComplement(-123456789)),
+			},
+		},
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {

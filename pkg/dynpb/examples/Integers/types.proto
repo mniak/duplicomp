@@ -14,12 +14,11 @@ message Object {
   optional sint64 field_sint64_pos =  9;
   optional sint64 field_sint64_neg = 10;
 
-  optional fixed32 field_fixed32_pos = 11;
-  optional fixed32 field_fixed32_neg = 12;
-  optional fixed64 field_fixed64_pos = 13;
-  optional fixed64 field_fixed64_neg = 14;
-  optional sfixed32 field_sfixed32_pos = 15;
-  optional sfixed32 field_sfixed32_neg = 16;
-  optional sfixed64 field_sfixed64_pos = 17;
-  optional sfixed64 field_sfixed64_neg = 18;
+  optional fixed32 field_fixed32 = 11;
+  optional fixed64 field_fixed64 = 12;
+  
+  optional sfixed32 field_sfixed32_pos = 13;
+  optional sfixed32 field_sfixed32_neg = 14;
+  optional sfixed64 field_sfixed64_pos = 15;
+  optional sfixed64 field_sfixed64_neg = 16;
 }
