@@ -12,3 +12,5 @@ field_fixed32: 123456789
 field_fixed64: 987654321012345678
 field_sfixed32_pos: 123456789
 field_sfixed32_neg: -123456789
+field_sfixed64_pos: 987654321012345678
+field_sfixed64_neg: -987654321012345678

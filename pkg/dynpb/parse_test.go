@@ -158,6 +158,20 @@ func TestParseProto_Example2(t *testing.T) {
 				Fixed32: uint32(twosComplement(-123456789)),
 			},
 		},
+		{
+			Index: 15,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: twosComplement(987654321012345678),
+			},
+		},
+		{
+			Index: 16,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: twosComplement(-987654321012345678),
+			},
+		},
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
@@ -173,7 +187,7 @@ func TestParseProto_Example2(t *testing.T) {
 		})
 	}
 
-	// assert.Equal(t, expected, parsed)
+	assert.Equal(t, expected, parsed)
 }
 
 func zigzag(v int64) uint64 {
