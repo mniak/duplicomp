@@ -99,21 +99,35 @@ func TestParseProto_Example2(t *testing.T) {
 				Varint: 98765432109876543,
 			},
 		},
-		// // sintN uses zig zag for negative numbers
-		// {
-		// 	Index: 5,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(-12345),
-		// 	},
-		// },
-		// {
-		// 	Index: 6,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:   TypeVarint,
-		// 		Varint: zigzag(-98765432109876543),
-		// 	},
-		// },
+		// sintN uses zig zag for negative numbers
+		{
+			Index: 7,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(12345),
+			},
+		},
+		{
+			Index: 8,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(-12345),
+			},
+		},
+		{
+			Index: 9,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(98765432109876543),
+			},
+		},
+		{
+			Index: 10,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: zigzag(-98765432109876543),
+			},
+		},
 		// // fixedN does not have negative numbers
 		// {
 		// 	Index: 7,

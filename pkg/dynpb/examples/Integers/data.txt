@@ -6,4 +6,7 @@ field_int64_neg: -1234567890123456789
 field_uint32: 12345
 field_uint64: 98765432109876543
 
-
+field_sint32_pos: 12345
+field_sint32_neg: -12345
+field_sint64_pos: 98765432109876543
+field_sint64_neg: -98765432109876543
