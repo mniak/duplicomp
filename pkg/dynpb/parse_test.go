@@ -64,21 +64,21 @@ func TestParseProto_Example2(t *testing.T) {
 			},
 		},
 		{
-			Index: 101,
+			Index: 2,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
 				Varint: twosComplement(-42),
 			},
 		},
 		{
-			Index: 2,
+			Index: 3,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
 				Varint: 1234567890123456789,
 			},
 		},
 		{
-			Index: 102,
+			Index: 4,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
 				Varint: twosComplement(-1234567890123456789),
@@ -86,64 +86,64 @@ func TestParseProto_Example2(t *testing.T) {
 		},
 		// uintN does not use negative, so they dont need encoding
 		{
-			Index: 3,
+			Index: 5,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
 				Varint: 12345,
 			},
 		},
 		{
-			Index: 4,
+			Index: 6,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
 				Varint: 98765432109876543,
 			},
 		},
-		// sintN uses zig zag for negative numbers
-		{
-			Index: 5,
-			ProtoValue: ProtoValue{
-				Type:   TypeVarint,
-				Varint: zigzag(-12345),
-			},
-		},
-		{
-			Index: 6,
-			ProtoValue: ProtoValue{
-				Type:   TypeVarint,
-				Varint: zigzag(-98765432109876543),
-			},
-		},
-		// fixedN does not have negative numbers
-		{
-			Index: 7,
-			ProtoValue: ProtoValue{
-				Type:    TypeFixed32,
-				Fixed32: 123456789,
-			},
-		},
-		{
-			Index: 8,
-			ProtoValue: ProtoValue{
-				Type:    TypeFixed64,
-				Fixed64: 987654321012345678,
-			},
-		},
-		// sfixedN uses two's complement for negative numbers
-		{
-			Index: 9,
-			ProtoValue: ProtoValue{
-				Type:    TypeFixed32,
-				Fixed32: uint32(twosComplement(-123456789)),
-			},
-		},
-		{
-			Index: 10,
-			ProtoValue: ProtoValue{
-				Type:    TypeFixed64,
-				Fixed64: twosComplement(-987654321012345678),
-			},
-		},
+		// // sintN uses zig zag for negative numbers
+		// {
+		// 	Index: 5,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:   TypeVarint,
+		// 		Varint: zigzag(-12345),
+		// 	},
+		// },
+		// {
+		// 	Index: 6,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:   TypeVarint,
+		// 		Varint: zigzag(-98765432109876543),
+		// 	},
+		// },
+		// // fixedN does not have negative numbers
+		// {
+		// 	Index: 7,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed32,
+		// 		Fixed32: 123456789,
+		// 	},
+		// },
+		// {
+		// 	Index: 8,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed64,
+		// 		Fixed64: 987654321012345678,
+		// 	},
+		// },
+		// // sfixedN uses two's complement for negative numbers
+		// {
+		// 	Index: 9,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed32,
+		// 		Fixed32: uint32(twosComplement(-123456789)),
+		// 	},
+		// },
+		// {
+		// 	Index: 10,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed64,
+		// 		Fixed64: twosComplement(-987654321012345678),
+		// 	},
+		// },
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {

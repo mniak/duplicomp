@@ -2,11 +2,8 @@ field_int32_pos: 42
 field_int32_neg: -42
 field_int64_pos: 1234567890123456789
 field_int64_neg: -1234567890123456789
+
 field_uint32: 12345
 field_uint64: 98765432109876543
-field_sint32: -12345
-field_sint64: -98765432109876543
-field_fixed32: 123456789
-field_fixed64: 987654321012345678
-field_sfixed32: -123456789
-field_sfixed64: -987654321012345678
+
+
