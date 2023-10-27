@@ -215,13 +215,13 @@ func TestParseProto_Example_Floats(t *testing.T) {
 				Fixed32: float(3.1415926),
 			},
 		},
-		// {
-		// 	Index: 2,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed32,
-		// 		Fixed32: float(-3.1415926),
-		// 	},
-		// },
+		{
+			Index: 2,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: float(-3.1415926),
+			},
+		},
 		// // double
 		// {
 		// 	Index: 3,
