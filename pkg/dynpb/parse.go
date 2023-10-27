@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 )
@@ -26,7 +27,7 @@ type ProtoValue struct {
 	Varint  uint64
 	Fixed32 uint32
 	Fixed64 uint64
-	Group   []IndexedProtoValue
+	Group   ProtoMap
 }
 
 func (v ProtoValue) String() string {
@@ -50,13 +51,41 @@ func (v ProtoValue) String() string {
 	}
 }
 
+type invalidType struct{}
+
+func (v ProtoValue) RawValue() any {
+	switch v.Type {
+	case TypeBytes:
+		return v.Bytes
+	case TypeVarint:
+		return v.Varint
+	case TypeFixed32:
+		return v.Fixed32
+	case TypeFixed64:
+		return v.Fixed64
+	case TypeGroup:
+		return v.Group.ProtoMapToMap()
+
+	default:
+		return invalidType{}
+	}
+}
+
 type (
-	ProtoMap          = []IndexedProtoValue
+	ProtoMap          []IndexedProtoValue
+	HintMap           map[int]TypeHint
+	Object            = map[int]any
 	IndexedProtoValue struct {
 		Index int
 		ProtoValue
 	}
 )
+
+func (pm ProtoMap) ProtoMapToMap() Object {
+	return lo.Associate[IndexedProtoValue, int, any](pm, func(item IndexedProtoValue) (int, any) {
+		return item.Index, item.RawValue()
+	})
+}
 
 func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
 	unknownBytes := m.ProtoReflect().GetUnknown()
@@ -191,4 +220,29 @@ func PrintProtoWithHint(m proto.Message, hints ProtoHintMap) error {
 
 	// return sb.String(), nil
 	return nil
+}
+
+func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
+	if hints == nil {
+		hints = make(HintMap)
+	}
+	protoMap, err := parseProtoBytes(data)
+	if err != nil {
+		return nil, err
+	}
+	result := make(Object)
+	for _, field := range protoMap {
+		rawValue := field.RawValue()
+
+		if hint, hasHint := hints[field.Index]; hasHint {
+			var err error
+			rawValue, err = hint.Apply(field.RawValue())
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		result[field.Index] = rawValue
+	}
+	return result, nil
 }

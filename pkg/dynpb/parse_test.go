@@ -268,3 +268,49 @@ func TestParseProto_Example_Floats(t *testing.T) {
 
 	assert.Equal(t, expected, parsed)
 }
+
+func TestParseToMapWithHints_Example_Basic(t *testing.T) {
+	ex := LoadExample("Basic")
+
+	t.Run("No hints", func(t *testing.T) {
+		parsed, err := parseToMapWithHints(ex.Bytes, make(HintMap))
+		require.NoError(t, err)
+
+		expected := map[int]any{
+			// int32
+			1: uint32(79),
+			// String
+			2: []byte("Howdy, planet!"),
+			// Booleans
+			3: uint64(1), // true
+			4: uint64(0), // false
+			// Enum
+			5: uint64(2), // YELLOW
+		}
+		assert.Equal(t, expected, parsed)
+	})
+
+	t.Run("All hints", func(t *testing.T) {
+		parsed, err := parseToMapWithHints(ex.Bytes, HintMap{
+			1: HintInt{},
+			2: HintString{},
+			3: HintBoolean{},
+			4: HintBoolean{},
+			5: HintInt{},
+		})
+		require.NoError(t, err)
+
+		expected := map[int]any{
+			// int32
+			1: int(79),
+			// String
+			2: string("Howdy, planet!"),
+			// Booleans
+			3: true,  // true
+			4: false, // false
+			// Enum
+			5: uint64(2), // YELLOW
+		}
+		assert.Equal(t, expected, parsed)
+	})
+}
