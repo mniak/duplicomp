@@ -1,8 +1,16 @@
 syntax = "proto3";
 
+enum Color {
+  RED = 0;
+  ORANGE = 1;
+  YELLOW = 2;
+  GREEN = 3;
+}
+
 message Object {
   optional fixed32 field_int32 = 1;
   optional string field_string = 2;
   optional bool field_bool_1 = 3;
   optional bool field_bool_2 = 4;
+  optional Color field_enum = 5;
 }

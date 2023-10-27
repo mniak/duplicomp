@@ -3,7 +3,6 @@ package dynpb
 import (
 	_ "embed"
 	"fmt"
-	"math"
 	"testing"
 
 	"github.com/samber/lo"
@@ -59,6 +58,14 @@ func TestParseProto_Example_Basic(t *testing.T) {
 				Varint: 0, // false
 			},
 		},
+		// Enum
+		{
+			Index: 5,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 2, // YELLOW
+			},
+		},
 	}
 	assert.Equal(t, expected, parsed)
 }
@@ -85,7 +92,7 @@ func TestParseProto_Example_Integers(t *testing.T) {
 			Index: 2,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: twosComplement(-42),
+				Varint: EncodeTwosComplement(-42),
 			},
 		},
 		{
@@ -99,7 +106,7 @@ func TestParseProto_Example_Integers(t *testing.T) {
 			Index: 4,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: twosComplement(-1234567890123456789),
+				Varint: EncodeTwosComplement(-1234567890123456789),
 			},
 		},
 		// uintN does not use negative, so they dont need encoding
@@ -122,28 +129,28 @@ func TestParseProto_Example_Integers(t *testing.T) {
 			Index: 7,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: zigzag(12345),
+				Varint: EncodeZigZag(12345),
 			},
 		},
 		{
 			Index: 8,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: zigzag(-12345),
+				Varint: EncodeZigZag(-12345),
 			},
 		},
 		{
 			Index: 9,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: zigzag(98765432109876543),
+				Varint: EncodeZigZag(98765432109876543),
 			},
 		},
 		{
 			Index: 10,
 			ProtoValue: ProtoValue{
 				Type:   TypeVarint,
-				Varint: zigzag(-98765432109876543),
+				Varint: EncodeZigZag(-98765432109876543),
 			},
 		},
 		// fixedN does not have negative numbers
@@ -166,28 +173,28 @@ func TestParseProto_Example_Integers(t *testing.T) {
 			Index: 13,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed32,
-				Fixed32: uint32(twosComplement(123456789)),
+				Fixed32: uint32(EncodeTwosComplement(123456789)),
 			},
 		},
 		{
 			Index: 14,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed32,
-				Fixed32: uint32(twosComplement(-123456789)),
+				Fixed32: uint32(EncodeTwosComplement(-123456789)),
 			},
 		},
 		{
 			Index: 15,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed64,
-				Fixed64: twosComplement(987654321012345678),
+				Fixed64: EncodeTwosComplement(987654321012345678),
 			},
 		},
 		{
 			Index: 16,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed64,
-				Fixed64: twosComplement(-987654321012345678),
+				Fixed64: EncodeTwosComplement(-987654321012345678),
 			},
 		},
 	}
@@ -219,14 +226,14 @@ func TestParseProto_Example_Floats(t *testing.T) {
 			Index: 1,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed32,
-				Fixed32: float(3.1415926),
+				Fixed32: EncodeFloat(3.1415926),
 			},
 		},
 		{
 			Index: 2,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed32,
-				Fixed32: float(-3.1415926),
+				Fixed32: EncodeFloat(-3.1415926),
 			},
 		},
 		// double
@@ -234,14 +241,14 @@ func TestParseProto_Example_Floats(t *testing.T) {
 			Index: 3,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed64,
-				Fixed64: double(1.6180339887498),
+				Fixed64: EncodeDouble(1.6180339887498),
 			},
 		},
 		{
 			Index: 4,
 			ProtoValue: ProtoValue{
 				Type:    TypeFixed64,
-				Fixed64: double(-1.6180339887498),
+				Fixed64: EncodeDouble(-1.6180339887498),
 			},
 		},
 	}
@@ -260,26 +267,4 @@ func TestParseProto_Example_Floats(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, parsed)
-}
-
-func zigzag(v int64) uint64 {
-	if v >= 0 {
-		return uint64(v * 2)
-	} else {
-		return uint64(v*-2 - 1)
-	}
-}
-
-func twosComplement(v int64) uint64 {
-	return uint64(v)
-}
-
-func float(f float32) uint32 {
-	b := math.Float32bits(f)
-	return b
-}
-
-func double(f float64) uint64 {
-	b := math.Float64bits(f)
-	return b
 }
