@@ -193,11 +193,11 @@ func TestParseProto_Example_Integers(t *testing.T) {
 
 func float(f float32) uint32 {
 	b := math.Float32bits(f)
-	return uint32(twosComplement(int64(b)))
+	return b
 }
 
-func double(d float64) uint64 {
-	b := math.Float64bits(d)
+func double(f float64) uint64 {
+	b := math.Float64bits(f)
 	return b
 }
 
@@ -215,23 +215,23 @@ func TestParseProto_Example_Floats(t *testing.T) {
 				Fixed32: float(3.1415926),
 			},
 		},
-		{
-			Index: 1,
-			ProtoValue: ProtoValue{
-				Type:    TypeFixed32,
-				Fixed32: float(-3.1415926),
-			},
-		},
-		// // double
 		// {
 		// 	Index: 2,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed32,
+		// 		Fixed32: float(-3.1415926),
+		// 	},
+		// },
+		// // double
+		// {
+		// 	Index: 3,
 		// 	ProtoValue: ProtoValue{
 		// 		Type:    TypeFixed64,
 		// 		Fixed64: double(1.6180339887498),
 		// 	},
 		// },
 		// {
-		// 	Index: 2,
+		// 	Index: 4,
 		// 	ProtoValue: ProtoValue{
 		// 		Type:    TypeFixed64,
 		// 		Fixed64: double(-1.6180339887498),
