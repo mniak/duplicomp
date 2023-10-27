@@ -3,4 +3,6 @@ syntax = "proto3";
 message Object {
   optional fixed32 field_int32 = 1;
   optional string field_string = 2;
+  optional bool field_bool_1 = 3;
+  optional bool field_bool_2 = 4;
 }

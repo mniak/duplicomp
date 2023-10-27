@@ -28,6 +28,7 @@ func TestParseProto_Example_Basic(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := []IndexedProtoValue{
+		// int32
 		{
 			Index: 1,
 			ProtoValue: ProtoValue{
@@ -35,11 +36,27 @@ func TestParseProto_Example_Basic(t *testing.T) {
 				Fixed32: 79,
 			},
 		},
+		// String
 		{
 			Index: 2,
 			ProtoValue: ProtoValue{
 				Type:  TypeBytes,
 				Bytes: []byte("Howdy, planet!"),
+			},
+		},
+		// Booleans
+		{
+			Index: 3,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 1, // true
+			},
+		},
+		{
+			Index: 4,
+			ProtoValue: ProtoValue{
+				Type:   TypeVarint,
+				Varint: 0, // false
 			},
 		},
 	}
@@ -191,16 +208,6 @@ func TestParseProto_Example_Integers(t *testing.T) {
 	assert.Equal(t, expected, parsed)
 }
 
-func float(f float32) uint32 {
-	b := math.Float32bits(f)
-	return b
-}
-
-func double(f float64) uint64 {
-	b := math.Float64bits(f)
-	return b
-}
-
 func TestParseProto_Example_Floats(t *testing.T) {
 	ex := LoadExample("Floats")
 	parsed, err := parseProtoBytes(ex.Bytes)
@@ -265,4 +272,14 @@ func zigzag(v int64) uint64 {
 
 func twosComplement(v int64) uint64 {
 	return uint64(v)
+}
+
+func float(f float32) uint32 {
+	b := math.Float32bits(f)
+	return b
+}
+
+func double(f float64) uint64 {
+	b := math.Float64bits(f)
+	return b
 }
