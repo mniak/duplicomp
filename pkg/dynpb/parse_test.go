@@ -3,6 +3,7 @@ package dynpb
 import (
 	_ "embed"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/samber/lo"
@@ -21,7 +22,7 @@ func BuildDescriptor() protoreflect.MessageDescriptor {
 	return nil
 }
 
-func TestParseProto_Example1(t *testing.T) {
+func TestParseProto_Example_Basic(t *testing.T) {
 	ex := LoadExample("Basic")
 	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
@@ -45,7 +46,7 @@ func TestParseProto_Example1(t *testing.T) {
 	assert.Equal(t, expected, parsed)
 }
 
-func TestParseProto_Example2(t *testing.T) {
+func TestParseProto_Example_Integers(t *testing.T) {
 	ex := LoadExample("Integers")
 	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
@@ -172,6 +173,70 @@ func TestParseProto_Example2(t *testing.T) {
 				Fixed64: twosComplement(-987654321012345678),
 			},
 		},
+	}
+
+	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
+		return v.Index, v.ProtoValue
+	})
+	parsedMap := lo.SliceToMap[IndexedProtoValue, int](parsed, func(v IndexedProtoValue) (int, ProtoValue) {
+		return v.Index, v.ProtoValue
+	})
+	for fieldnum, expval := range expectedMap {
+		t.Run(fmt.Sprintf("Field %d", fieldnum), func(t *testing.T) {
+			actual := parsedMap[fieldnum]
+			assert.Equal(t, expval, actual)
+		})
+	}
+
+	assert.Equal(t, expected, parsed)
+}
+
+func float(f float32) uint32 {
+	b := math.Float32bits(f)
+	return b
+}
+
+func double(d float64) uint64 {
+	b := math.Float64bits(d)
+	return b
+}
+
+func TestParseProto_Example_Floats(t *testing.T) {
+	ex := LoadExample("Floats")
+	parsed, err := parseProtoBytes(ex.Bytes)
+	require.NoError(t, err)
+
+	expected := []IndexedProtoValue{
+		// float
+		{
+			Index: 1,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed32,
+				Fixed32: float(3.1415926),
+			},
+		},
+		// {
+		// 	Index: 1,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed32,
+		// 		Fixed32: float(-3.1415926),
+		// 	},
+		// },
+		// // double
+		// {
+		// 	Index: 2,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed64,
+		// 		Fixed64: double(1.6180339887498),
+		// 	},
+		// },
+		// {
+		// 	Index: 2,
+		// 	ProtoValue: ProtoValue{
+		// 		Type:    TypeFixed64,
+		// 		Fixed64: double(-1.6180339887498),
+		// 	},
+		// },
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {

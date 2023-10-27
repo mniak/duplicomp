@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message Object {
+  optional float field_float_pos = 1;
+  optional float field_float_neg = 2;
+  optional double field_double_pos = 3;
+  optional double field_double_neg = 4;
+}

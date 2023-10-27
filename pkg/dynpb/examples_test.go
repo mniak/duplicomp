@@ -2,7 +2,6 @@ package dynpb
 
 import (
 	"embed"
-	_ "embed"
 	"io"
 	"path/filepath"
 
