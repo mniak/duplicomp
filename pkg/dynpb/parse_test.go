@@ -230,13 +230,13 @@ func TestParseProto_Example_Floats(t *testing.T) {
 				Fixed64: double(1.6180339887498),
 			},
 		},
-		// {
-		// 	Index: 4,
-		// 	ProtoValue: ProtoValue{
-		// 		Type:    TypeFixed64,
-		// 		Fixed64: double(-1.6180339887498),
-		// 	},
-		// },
+		{
+			Index: 4,
+			ProtoValue: ProtoValue{
+				Type:    TypeFixed64,
+				Fixed64: double(-1.6180339887498),
+			},
+		},
 	}
 
 	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
