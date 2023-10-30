@@ -411,17 +411,19 @@ func TestParseToMapWithHints_Example_Lists(t *testing.T) {
 		HintMap{
 			1: HintPackedList{HintInt32, TypeVarint},
 			2: HintList{HintString},
+			3: HintList{HintInt32},
 		},
 	)
 	require.NoError(t, err)
 
 	expected := map[int]any{
-		1: []any{int32(1), int32(302), int32(40003), int32(70004), int32(2)},
+		1: []any{int32(1), int32(302), int32(40003), int32(70004)},
 		2: []any{
 			"Sphinx of black quartz, judge my vow",
 			"The five boxing wizards jump quickly",
 			"Pack my box with five dozen liquor jugs",
 		},
+		3: []any{int32(9), int32(310), int32(40011), int32(70012)},
 	}
 
 	assert.Equal(t, expected, parsed)
