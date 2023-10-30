@@ -416,10 +416,11 @@ func TestParseToMapWithHints_Example_Lists(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := map[int]any{
-		1: []any{int32(1), int32(302), int32(40003), int32(70004)},
+		1: []any{int32(1), int32(302), int32(40003), int32(70004), int32(2)},
 		2: []any{
 			"Sphinx of black quartz, judge my vow",
 			"The five boxing wizards jump quickly",
+			"Pack my box with five dozen liquor jugs",
 		},
 	}
 

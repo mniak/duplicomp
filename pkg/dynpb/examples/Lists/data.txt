@@ -4,3 +4,5 @@ list_of_numbers: 40003
 list_of_numbers: 70004
 list_of_strings: "Sphinx of black quartz, judge my vow"
 list_of_strings: "The five boxing wizards jump quickly"
+list_of_numbers: 2
+list_of_strings: "Pack my box with five dozen liquor jugs"
