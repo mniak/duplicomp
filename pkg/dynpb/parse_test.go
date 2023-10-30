@@ -291,12 +291,18 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 	})
 
 	t.Run("All hints", func(t *testing.T) {
+		type Color1 int
+		const YELLOW Color1 = 2
+		const BLUE Color1 = 1
+
 		parsed, err := parseToMapWithHints(ex.Bytes, HintMap{
 			1: HintInt{},
 			2: HintString{},
-			3: HintBoolean{},
-			4: HintBoolean{},
-			5: HintInt{},
+			3: HintBool{},
+			4: HintBool{},
+			5: HintEnum[Color1]{
+				EnumValues: []Color1{},
+			},
 		})
 		require.NoError(t, err)
 
@@ -309,7 +315,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 			3: true,  // true
 			4: false, // false
 			// Enum
-			5: uint64(2), // YELLOW
+			5: YELLOW, // YELLOW
 		}
 		assert.Equal(t, expected, parsed)
 	})

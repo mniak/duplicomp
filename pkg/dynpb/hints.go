@@ -12,24 +12,25 @@ type (
 	HintStruct        struct{}
 	HintString        struct{}
 	HintObject[T any] struct{}
-	HintBoolean       struct{}
+	HintBool          struct{}
+	HintEnum[T ~int]  struct {
+		EnumValues []T
+	}
 )
 
 func (h HintInt) Apply(value any) (any, error) {
-	var result int
 	switch v := value.(type) {
 	case int32:
-		result = int(v)
+		return int(v), nil
 	case uint32:
-		result = int(v)
+		return int(v), nil
 	case int64:
-		result = int(v)
+		return int(v), nil
 	case uint64:
-		result = int(v)
+		return int(v), nil
 	default:
 		return value, errors.New("could not appy hint: Int")
 	}
-	return result, nil
 }
 
 func (h HintFloat) Apply(value any) (any, error) {
@@ -41,20 +42,44 @@ func (h HintStruct) Apply(value any) (any, error) {
 }
 
 func (h HintString) Apply(value any) (any, error) {
-	var result string
 	switch v := value.(type) {
 	case []byte:
-		result = string(v)
+		return string(v), nil
 	default:
 		return value, errors.New("could not appy hint: String")
 	}
-	return result, nil
 }
 
 func (h HintObject[T]) Apply(value any) (any, error) {
 	return value, nil
 }
 
-func (h HintBoolean) Apply(value any) (any, error) {
-	return value, nil
+func (h HintBool) Apply(value any) (any, error) {
+	switch v := value.(type) {
+	case int32:
+		return v != 0, nil
+	case uint32:
+		return v != 0, nil
+	case int64:
+		return v != 0, nil
+	case uint64:
+		return v != 0, nil
+	default:
+		return value, errors.New("could not appy hint: Bool")
+	}
+}
+
+func (h HintEnum[T]) Apply(value any) (any, error) {
+	switch v := value.(type) {
+	case int32:
+		return T(v), nil
+	case uint32:
+		return T(v), nil
+	case int64:
+		return T(v), nil
+	case uint64:
+		return T(v), nil
+	default:
+		return value, errors.New("could not appy hint: Enum")
+	}
 }
