@@ -23,3 +23,15 @@ func EncodeDouble(f float64) uint64 {
 	b := math.Float64bits(f)
 	return b
 }
+
+func DecodeZigZag(v uint64) int64 {
+	if v%2 == 0 {
+		return int64(v / 2)
+	} else {
+		return int64((v+1)/2) * -1
+	}
+}
+
+func DecodeTwosComplement(v uint64) int64 {
+	return int64(v)
+}

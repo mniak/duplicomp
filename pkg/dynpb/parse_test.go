@@ -280,3 +280,64 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 		assert.Equal(t, expected, parsed)
 	})
 }
+
+func TestParseToMapWithHints_Example_Integers(t *testing.T) {
+	ex := LoadExample("Integers")
+	parsed, err := parseToMapWithHints(
+		ex.Bytes,
+		HintMap{
+			// intN uses two's-compement for negative numbers
+			1: HintInt{Encoding: TwosComplement},
+			2: HintInt{Encoding: TwosComplement},
+			3: HintInt{Encoding: TwosComplement},
+			4: HintInt{Encoding: TwosComplement},
+			// uintN does not use negative, so they dont need encoding
+			5: HintInt{},
+			6: HintInt{},
+			// sintN uses zig zag for negative numbers
+			7:  HintInt{Encoding: ZigZag},
+			8:  HintInt{Encoding: ZigZag},
+			9:  HintInt{Encoding: ZigZag},
+			10: HintInt{Encoding: ZigZag},
+			// fixedN does not have negative numbers
+			11: HintInt{},
+			12: HintInt{},
+			// sfixedN uses two's complement for negative numbers
+			13: HintInt{Encoding: TwosComplement},
+			14: HintInt{Encoding: TwosComplement},
+			15: HintInt{Encoding: TwosComplement},
+			16: HintInt{Encoding: TwosComplement},
+		},
+	)
+	require.NoError(t, err)
+
+	// Pay attention because each integer type represent negatives differently.
+	// intN and sfixedN uses two's-complement encoding
+	// sintN and sfixedN uses zigzag encoding
+	// https://protobuf.dev/programming-guides/encoding/#signed-ints
+	expected := map[int]any{
+		// intN uses two's-compement for negative numbers
+		1: 42,
+		2: -42,
+		3: 1234567890123456789,
+		4: -1234567890123456789,
+		// uintN does not use negative, so they dont need encoding
+		5: 12345,
+		6: 98765432109876543,
+		// sintN uses zig zag for negative numbers
+		7:  12345,
+		8:  -12345,
+		9:  98765432109876543,
+		10: -98765432109876543,
+		// fixedN does not have negative numbers
+		11: 123456789,
+		12: 987654321012345678,
+		// sfixedN uses two's complement for negative numbers
+		13: 123456789,
+		14: -123456789,
+		15: 987654321012345678,
+		16: -987654321012345678,
+	}
+
+	assert.Equal(t, expected, parsed)
+}
