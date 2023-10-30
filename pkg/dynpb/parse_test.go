@@ -341,3 +341,28 @@ func TestParseToMapWithHints_Example_Integers(t *testing.T) {
 
 	assert.Equal(t, expected, parsed)
 }
+
+func TestParseToMapWithHints_Example_Floats(t *testing.T) {
+	ex := LoadExample("Floats")
+	parsed, err := parseToMapWithHints(
+		ex.Bytes,
+		HintMap{
+			1: HintFloat,
+			2: HintFloat,
+			3: HintDouble,
+			4: HintDouble,
+		},
+	)
+	require.NoError(t, err)
+
+	expected := map[int]any{
+		// float
+		1: float32(3.1415926),
+		2: float32(-3.1415926),
+		// double
+		3: float64(1.6180339887498),
+		4: float64(-1.6180339887498),
+	}
+
+	assert.Equal(t, expected, parsed)
+}

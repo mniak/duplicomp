@@ -14,34 +14,35 @@ const (
 	ZigZag         IntEncoding = 2
 )
 
-type IntegerHint string
+type NumericHint string
 
 const (
-	HintInt32       IntegerHint = "Int32"
-	HintInt32ZigZag IntegerHint = "Int32ZigZag"
-	HintUInt32      IntegerHint = "UInt32"
+	HintInt32       NumericHint = "Int32"
+	HintInt32ZigZag NumericHint = "Int32ZigZag"
+	HintUInt32      NumericHint = "UInt32"
 
-	HintInt64       IntegerHint = "Int64"
-	HintInt64ZigZag IntegerHint = "Int64ZigZag"
-	HintUInt64      IntegerHint = "UInt64"
+	HintInt64       NumericHint = "Int64"
+	HintInt64ZigZag NumericHint = "Int64ZigZag"
+	HintUInt64      NumericHint = "UInt64"
 
-	// HintFloat IntegerHint = "Float"
-	// HintString SimpleHint = "String"
-	HintBool IntegerHint = "Bool"
+	HintFloat  NumericHint = "Float"
+	HintDouble NumericHint = "Double"
+
+	HintBool NumericHint = "Bool"
 )
 
-func (h IntegerHint) getValue(value any) (uint64, error) {
+func (h NumericHint) getValue(value any) (uint64, error) {
 	switch v := value.(type) {
 	case uint32:
 		return uint64(v), nil
 	case uint64:
 		return uint64(v), nil
 	default:
-		return 0, errors.New("could get integer value for hint")
+		return 0, errors.New("could get number value for hint")
 	}
 }
 
-func (h IntegerHint) Apply(value any) (any, error) {
+func (h NumericHint) Apply(value any) (any, error) {
 	val, err := h.getValue(value)
 	if err != nil {
 		return nil, err
@@ -61,13 +62,16 @@ func (h IntegerHint) Apply(value any) (any, error) {
 	case HintUInt64:
 		return uint64(val), nil
 
-	// case HintFloat:
-	// 	return float(val), nil
+	case HintFloat:
+		return DecodeFloat(val), nil
+	case HintDouble:
+		return DecodeDouble(val), nil
+
 	case HintBool:
 		return val != 0, nil
 
 	default:
-		return nil, fmt.Errorf("invalid simple hint: %q", string(h))
+		return nil, fmt.Errorf("invalid numeric hint: %q", string(h))
 	}
 }
 

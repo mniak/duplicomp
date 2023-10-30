@@ -35,3 +35,13 @@ func DecodeZigZag(v uint64) int64 {
 func DecodeTwosComplement(v uint64) int64 {
 	return int64(v)
 }
+
+func DecodeFloat(v uint64) float32 {
+	f := math.Float32frombits(uint32(v))
+	return f
+}
+
+func DecodeDouble(v uint64) float64 {
+	f := math.Float64frombits(uint64(v))
+	return f
+}
