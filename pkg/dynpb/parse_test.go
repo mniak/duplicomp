@@ -268,7 +268,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 
 		expected := map[int]any{
 			// int
-			1: int(79),
+			1: int32(79),
 			// String
 			2: string("Howdy, planet!"),
 			// Booleans
