@@ -403,3 +403,25 @@ func TestParseToMapWithHints_Example_Structs(t *testing.T) {
 
 	assert.Equal(t, expected, parsed)
 }
+
+func TestParseToMapWithHints_Example_Lists(t *testing.T) {
+	ex := LoadExample("Lists")
+	parsed, err := parseToMapWithHints(
+		ex.Bytes,
+		HintMap{
+			1: HintList{HintInt32},
+			2: HintList{HintString},
+		},
+	)
+	require.NoError(t, err)
+
+	expected := map[int]any{
+		1: []int32{5, 4, 3, 2, 1},
+		2: []string{
+			"Os ursinhos carinhosos",
+			"Estão aí pra ajudar",
+		},
+	}
+
+	assert.Equal(t, expected, parsed)
+}

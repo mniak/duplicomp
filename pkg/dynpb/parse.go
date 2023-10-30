@@ -190,37 +190,6 @@ type (
 	}
 )
 
-// func PrintProtoWithHint(m proto.Message, hints ProtoHintMap) error {
-// 	// var sb strings.Builder
-
-// 	fields, err := ParseProtoMessage(m)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, field := range fields {
-// 		fmt.Printf("Field %d ", field.Index)
-// 		hint, ok := hints[field.Index]
-// 		if ok {
-// 			fmt.Printf("has hint %q ", hint.Name)
-// 			switch {
-// 			case field.Type == TypeBytes && hint.SubFields != nil:
-// 				fmt.Printf("with subfields\n")
-// 				protowire.ConsumeFixed32(field.Bytes)
-// 				// for sfk, sfv := range hint.SubFields {
-// 				// }
-// 			default:
-// 				fmt.Printf("but the hint is unknown: %+v\n", hint)
-// 			}
-// 		} else {
-// 			fmt.Printf("without hint. value=%s\n", field.String())
-// 		}
-// 	}
-
-// 	// return sb.String(), nil
-// 	return nil
-// }
-
 func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
 	if hints == nil {
 		hints = make(HintMap)
@@ -235,7 +204,8 @@ func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
 
 		if hint, hasHint := hints[field.Index]; hasHint {
 			var err error
-			value, err = hint.Apply(field.RawValue())
+			current := result[field.Index]
+			value, err = hint.Apply(current, field.RawValue())
 			if err != nil {
 				return nil, err
 			}

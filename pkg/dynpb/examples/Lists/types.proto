@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message Object {
+  repeated int32 list_of_numbers = 1;
+  repeated string list_of_strings = 2;
+}

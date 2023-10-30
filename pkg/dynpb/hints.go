@@ -9,14 +9,14 @@ import (
 type (
 	HintMap  map[int]TypeHint
 	TypeHint interface {
-		Apply(value any) (any, error)
+		Apply(current, newValue any) (any, error)
 	}
 )
 
-func (h HintMap) Apply(value any) (any, error) {
-	bytes, ok := value.([]byte)
+func (h HintMap) Apply(current, newValue any) (any, error) {
+	bytes, ok := newValue.([]byte)
 	if !ok {
-		return nil, errors.New("could get byte slice value for hint")
+		return nil, errors.New("could not get byte slice value for hint")
 	}
 	return parseToMapWithHints(bytes, h)
 }
@@ -52,13 +52,17 @@ func (h NumericHint) getValue(value any) (uint64, error) {
 		return uint64(v), nil
 	case uint64:
 		return uint64(v), nil
+	case *uint32:
+		return uint64(*v), nil
+	case *uint64:
+		return uint64(*v), nil
 	default:
-		return 0, errors.New("could get number value for hint")
+		return 0, errors.New("could not get number value for hint")
 	}
 }
 
-func (h NumericHint) Apply(value any) (any, error) {
-	val, err := h.getValue(value)
+func (h NumericHint) Apply(current, newValue any) (any, error) {
+	val, err := h.getValue(newValue)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +101,10 @@ const (
 	HintString ByteSliceHint = "string"
 )
 
-func (h ByteSliceHint) Apply(value any) (any, error) {
-	bytes, ok := value.([]byte)
+func (h ByteSliceHint) Apply(current, newValue any) (any, error) {
+	bytes, ok := newValue.([]byte)
 	if !ok {
-		return nil, errors.New("could get byte slice value for hint")
+		return nil, errors.New("could not get byte slice value for hint")
 	}
 
 	switch h {
@@ -115,8 +119,8 @@ func (h ByteSliceHint) Apply(value any) (any, error) {
 
 type HintEnum[T ~int] struct{}
 
-func (h HintEnum[T]) Apply(value any) (any, error) {
-	switch v := value.(type) {
+func (h HintEnum[T]) Apply(current, newValue any) (any, error) {
+	switch v := newValue.(type) {
 	case int32:
 		return T(v), nil
 	case uint32:
@@ -126,6 +130,29 @@ func (h HintEnum[T]) Apply(value any) (any, error) {
 	case uint64:
 		return T(v), nil
 	default:
-		return value, errors.New("could not appy hint: Enum")
+		return newValue, errors.New("could not appy hint: Enum")
 	}
+}
+
+type HintList struct {
+	InnerHint TypeHint
+}
+
+func (h HintList) Apply(current, newValue any) (any, error) {
+	var result []any
+	if current != nil {
+		var ok bool
+		result, ok = current.([]any)
+		if !ok {
+			return nil, errors.New("could not appy hint: List")
+		}
+	}
+
+	newItem, err := h.InnerHint.Apply(nil, newValue)
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, newItem)
+	return result, nil
 }
