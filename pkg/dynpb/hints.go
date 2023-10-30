@@ -13,9 +13,7 @@ type (
 	HintString        struct{}
 	HintObject[T any] struct{}
 	HintBool          struct{}
-	HintEnum[T ~int]  struct {
-		EnumValues []T
-	}
+	HintEnum[T ~int]  struct{}
 )
 
 func (h HintInt) Apply(value any) (any, error) {

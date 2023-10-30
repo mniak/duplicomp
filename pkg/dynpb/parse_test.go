@@ -300,9 +300,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 			2: HintString{},
 			3: HintBool{},
 			4: HintBool{},
-			5: HintEnum[Color1]{
-				EnumValues: []Color1{},
-			},
+			5: HintEnum[Color1]{},
 		})
 		require.NoError(t, err)
 
