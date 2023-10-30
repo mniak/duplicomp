@@ -1,5 +1,6 @@
-list_of_numbers: 3
-list_of_numbers: 270
-list_of_numbers: 86942
-list_of_strings: "Os ursinhos carinhosos"
-list_of_strings: "Estão aí pra ajudar"
+list_of_numbers: 1
+list_of_numbers: 302
+list_of_numbers: 40003
+list_of_numbers: 70004
+list_of_strings: "Sphinx of black quartz, judge my vow"
+list_of_strings: "The five boxing wizards jump quickly"

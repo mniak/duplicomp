@@ -9,12 +9,15 @@ import (
 type (
 	HintMap  map[int]TypeHint
 	TypeHint interface {
-		Apply(current, newValue any) (any, error)
+		Apply(current any, newValue ProtoValue) (any, error)
+	}
+	PackedType interface {
+		PackInfo() (ProtoType, error)
 	}
 )
 
-func (h HintMap) Apply(current, newValue any) (any, error) {
-	bytes, ok := newValue.([]byte)
+func (h HintMap) Apply(current any, newValue ProtoValue) (any, error) {
+	bytes, ok := newValue.RawValue().([]byte)
 	if !ok {
 		return nil, errors.New("could not get byte slice value for hint")
 	}
@@ -61,8 +64,8 @@ func (h NumericHint) getValue(value any) (uint64, error) {
 	}
 }
 
-func (h NumericHint) Apply(current, newValue any) (any, error) {
-	val, err := h.getValue(newValue)
+func (h NumericHint) Apply(current any, newValue ProtoValue) (any, error) {
+	val, err := h.getValue(newValue.RawValue())
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +97,35 @@ func (h NumericHint) Apply(current, newValue any) (any, error) {
 	}
 }
 
+func (h NumericHint) PackInfo() (ProtoType, error) {
+	switch h {
+	// case HintInt32:
+	// 	return int32(val), nil
+	// case HintInt32ZigZag:
+	// 	return int32(DecodeZigZag(val)), nil
+	// case HintUInt32:
+	// 	return uint32(val), nil
+
+	// case HintInt64:
+	// 	return int64(val), nil
+	// case HintInt64ZigZag:
+	// 	return int64(DecodeZigZag(val)), nil
+	// case HintUInt64:
+	// 	return uint64(val), nil
+
+	// case HintFloat:
+	// 	return DecodeFloat(val), nil
+	// case HintDouble:
+	// 	return DecodeDouble(val), nil
+
+	// case HintBool:
+	// 	return val != 0, nil
+
+	default:
+		return TypeFixed32, fmt.Errorf("invalid numeric hint: %q", string(h))
+	}
+}
+
 type ByteSliceHint string
 
 const (
@@ -101,8 +133,8 @@ const (
 	HintString ByteSliceHint = "string"
 )
 
-func (h ByteSliceHint) Apply(current, newValue any) (any, error) {
-	bytes, ok := newValue.([]byte)
+func (h ByteSliceHint) Apply(current any, newValue ProtoValue) (any, error) {
+	bytes, ok := newValue.RawValue().([]byte)
 	if !ok {
 		return nil, errors.New("could not get byte slice value for hint")
 	}
@@ -119,8 +151,8 @@ func (h ByteSliceHint) Apply(current, newValue any) (any, error) {
 
 type HintEnum[T ~int] struct{}
 
-func (h HintEnum[T]) Apply(current, newValue any) (any, error) {
-	switch v := newValue.(type) {
+func (h HintEnum[T]) Apply(current any, newValue ProtoValue) (any, error) {
+	switch v := newValue.RawValue().(type) {
 	case int32:
 		return T(v), nil
 	case uint32:
@@ -138,7 +170,7 @@ type HintList struct {
 	InnerHint TypeHint
 }
 
-func (h HintList) Apply(current, newValue any) (any, error) {
+func (h HintList) Apply(current any, newValue ProtoValue) (any, error) {
 	var result []any
 	if current != nil {
 		var ok bool
@@ -154,5 +186,43 @@ func (h HintList) Apply(current, newValue any) (any, error) {
 	}
 
 	result = append(result, newItem)
+	return result, nil
+}
+
+type HintPackedList struct {
+	Hint NumericHint
+	Type ProtoType
+}
+
+func (h HintPackedList) Apply(current any, newValue ProtoValue) (any, error) {
+	bytes, ok := newValue.RawValue().([]byte)
+	if !ok {
+		return nil, errors.New("could not get byte slice pack for hint")
+	}
+
+	var result []any
+	if current != nil {
+		var ok bool
+		result, ok = current.([]any)
+		if !ok {
+			return nil, errors.New("could not appy hint: Packed Numeric List")
+		}
+	}
+
+	for len(bytes) > 0 {
+		pval, read, err := parseNumericValue(h.Type, bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		bytes = bytes[read:]
+		val, err := h.Hint.Apply(result, pval)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, val)
+	}
+
 	return result, nil
 }

@@ -92,7 +92,41 @@ func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
 	return fields, err
 }
 
-func consumeValue(num protowire.Number, wiretype protowire.Type, b []byte) (ProtoValue, int, error) {
+func parseNumericValue(type_ ProtoType, b []byte) (ProtoValue, int, error) {
+	switch type_ {
+	case TypeVarint:
+		v, length := protowire.ConsumeVarint(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse varint: %s", protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:   TypeVarint,
+			Varint: v,
+		}, length, nil
+	case TypeFixed32:
+		v, length := protowire.ConsumeFixed32(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse fixed32: %s", protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:    TypeFixed32,
+			Fixed32: v,
+		}, length, nil
+	case TypeFixed64:
+		v, length := protowire.ConsumeFixed64(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse fixed64: %s", protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:    TypeFixed64,
+			Fixed64: v,
+		}, length, nil
+	default:
+		return ProtoValue{}, 0, fmt.Errorf("error parsing unknown field type: %v", type_)
+	}
+}
+
+func parseValue(num protowire.Number, wiretype protowire.Type, b []byte) (ProtoValue, int, error) {
 	switch wiretype {
 	case protowire.VarintType:
 		v, length := protowire.ConsumeVarint(b)
@@ -161,7 +195,7 @@ func parseProtoBytes(b []byte) (ProtoMap, error) {
 
 		var err error
 		var pval ProtoValue
-		pval, length, err = consumeValue(num, wiretype, b)
+		pval, length, err = parseValue(num, wiretype, b)
 		if err != nil {
 			return nil, err
 		}
@@ -199,7 +233,7 @@ func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
 		if hint, hasHint := hints[field.Index]; hasHint {
 			var err error
 			current := result[field.Index]
-			value, err = hint.Apply(current, field.RawValue())
+			value, err = hint.Apply(current, field.ProtoValue)
 			if err != nil {
 				return nil, err
 			}

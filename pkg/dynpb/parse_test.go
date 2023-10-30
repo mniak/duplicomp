@@ -409,17 +409,17 @@ func TestParseToMapWithHints_Example_Lists(t *testing.T) {
 	parsed, err := parseToMapWithHints(
 		ex.Bytes,
 		HintMap{
-			1: HintList{HintInt32},
+			1: HintPackedList{HintInt32, TypeVarint},
 			2: HintList{HintString},
 		},
 	)
 	require.NoError(t, err)
 
 	expected := map[int]any{
-		1: []int32{5, 4, 3, 2, 1},
-		2: []string{
-			"Os ursinhos carinhosos",
-			"Estão aí pra ajudar",
+		1: []any{int32(1), int32(302), int32(40003), int32(70004)},
+		2: []any{
+			"Sphinx of black quartz, judge my vow",
+			"The five boxing wizards jump quickly",
 		},
 	}
 
