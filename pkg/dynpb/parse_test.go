@@ -68,7 +68,7 @@ func TestParseProto_Example_Integers(t *testing.T) {
 	// sintN and sfixedN uses zigzag encoding
 	// https://protobuf.dev/programming-guides/encoding/#signed-ints
 	expected := ProtoMap{
-		// intN uses two's-compement for negative numbers
+		// intN uses two's-complement for negative numbers
 		{
 			Index: 1,
 			ProtoValue: ProtoValue{
@@ -258,10 +258,10 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 		const BLUE Color1 = 1
 
 		parsed, err := parseToMapWithHints(ex.Bytes, HintMap{
-			1: HintInt{},
-			2: HintString{},
-			3: HintBool{},
-			4: HintBool{},
+			1: HintInt32,
+			2: HintString,
+			3: HintBool,
+			4: HintBool,
 			5: HintEnum[Color1]{},
 		})
 		require.NoError(t, err)
@@ -286,27 +286,27 @@ func TestParseToMapWithHints_Example_Integers(t *testing.T) {
 	parsed, err := parseToMapWithHints(
 		ex.Bytes,
 		HintMap{
-			// intN uses two's-compement for negative numbers
-			1: HintInt{Encoding: TwosComplement},
-			2: HintInt{Encoding: TwosComplement},
-			3: HintInt{Encoding: TwosComplement},
-			4: HintInt{Encoding: TwosComplement},
+			// intN uses two's-complement for negative numbers
+			1: HintInt32,
+			2: HintInt32,
+			3: HintInt64,
+			4: HintInt64,
 			// uintN does not use negative, so they dont need encoding
-			5: HintInt{},
-			6: HintInt{},
+			5: HintUInt32,
+			6: HintUInt64,
 			// sintN uses zig zag for negative numbers
-			7:  HintInt{Encoding: ZigZag},
-			8:  HintInt{Encoding: ZigZag},
-			9:  HintInt{Encoding: ZigZag},
-			10: HintInt{Encoding: ZigZag},
+			7:  HintInt32ZigZag,
+			8:  HintInt32ZigZag,
+			9:  HintInt64ZigZag,
+			10: HintInt64ZigZag,
 			// fixedN does not have negative numbers
-			11: HintInt{},
-			12: HintInt{},
+			11: HintUInt32,
+			12: HintUInt64,
 			// sfixedN uses two's complement for negative numbers
-			13: HintInt{Encoding: TwosComplement},
-			14: HintInt{Encoding: TwosComplement},
-			15: HintInt{Encoding: TwosComplement},
-			16: HintInt{Encoding: TwosComplement},
+			13: HintInt32,
+			14: HintInt32,
+			15: HintInt64,
+			16: HintInt64,
 		},
 	)
 	require.NoError(t, err)
@@ -316,27 +316,27 @@ func TestParseToMapWithHints_Example_Integers(t *testing.T) {
 	// sintN and sfixedN uses zigzag encoding
 	// https://protobuf.dev/programming-guides/encoding/#signed-ints
 	expected := map[int]any{
-		// intN uses two's-compement for negative numbers
-		1: 42,
-		2: -42,
-		3: 1234567890123456789,
-		4: -1234567890123456789,
+		// intN uses two's-complement for negative numbers
+		1: int32(42),
+		2: int32(-42),
+		3: int64(1234567890123456789),
+		4: int64(-1234567890123456789),
 		// uintN does not use negative, so they dont need encoding
-		5: 12345,
-		6: 98765432109876543,
+		5: uint32(12345),
+		6: uint64(98765432109876543),
 		// sintN uses zig zag for negative numbers
-		7:  12345,
-		8:  -12345,
-		9:  98765432109876543,
-		10: -98765432109876543,
+		7:  int32(12345),
+		8:  int32(-12345),
+		9:  int64(98765432109876543),
+		10: int64(-98765432109876543),
 		// fixedN does not have negative numbers
-		11: 123456789,
-		12: 987654321012345678,
+		11: uint32(123456789),
+		12: uint64(987654321012345678),
 		// sfixedN uses two's complement for negative numbers
-		13: 123456789,
-		14: -123456789,
-		15: 987654321012345678,
-		16: -987654321012345678,
+		13: int32(123456789),
+		14: int32(-123456789),
+		15: int64(987654321012345678),
+		16: int64(-987654321012345678),
 	}
 
 	assert.Equal(t, expected, parsed)
