@@ -232,17 +232,17 @@ func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
 	}
 	result := make(Object)
 	for _, field := range protoMap {
-		rawValue := field.RawValue()
+		value := field.RawValue()
 
 		if hint, hasHint := hints[field.Index]; hasHint {
 			var err error
-			rawValue, err = hint.Apply(field.RawValue())
+			value, err = hint.Apply(field.RawValue())
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		result[field.Index] = rawValue
+		result[field.Index] = value
 	}
 	return result, nil
 }

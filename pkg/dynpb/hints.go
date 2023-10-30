@@ -44,14 +44,10 @@ func (h hintIntZigZag) Apply(value any) (any, error) {
 
 func (h hintIntTwosComplement) Apply(value any) (any, error) {
 	switch v := value.(type) {
-	case int32:
-		return int(DecodeTwosComplement(uint64(v))), nil
 	case uint32:
-		return int(DecodeTwosComplement(uint64(v))), nil
-	case int64:
-		return int(DecodeTwosComplement(uint64(v))), nil
+		return int(int32(v)), nil
 	case uint64:
-		return int(DecodeTwosComplement(uint64(v))), nil
+		return int(int64(v)), nil
 	default:
 		return value, errors.New("could not appy hint: Int")
 	}
