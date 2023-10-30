@@ -6,18 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
-
-func TestBuildDescriptor(t *testing.T) {
-	desc := BuildDescriptor()
-	assert.NotNil(t, desc)
-	assert.NotEmpty(t, desc)
-}
-
-func BuildDescriptor() protoreflect.MessageDescriptor {
-	return nil
-}
 
 func TestParseProto_Example_Basic(t *testing.T) {
 	ex := LoadExample("Basic")
