@@ -366,3 +366,40 @@ func TestParseToMapWithHints_Example_Floats(t *testing.T) {
 
 	assert.Equal(t, expected, parsed)
 }
+
+func TestParseToMapWithHints_Example_Structs(t *testing.T) {
+	ex := LoadExample("Structs")
+	parsed, err := parseToMapWithHints(
+		ex.Bytes,
+		HintMap{
+			1: HintMap{
+				1: HintString,
+				2: HintString,
+				3: HintInt32,
+			},
+			2: HintMap{
+				1: HintString,
+				2: HintString,
+				3: HintInt32,
+			},
+			3: HintInt32,
+		},
+	)
+	require.NoError(t, err)
+
+	expected := map[int]any{
+		1: map[int]any{
+			1: "Peter",
+			2: "Parker",
+			3: int32(25),
+		},
+		2: map[int]any{
+			1: "Mary",
+			2: "Jane",
+			3: int32(24),
+		},
+		3: int32(452),
+	}
+
+	assert.Equal(t, expected, parsed)
+}

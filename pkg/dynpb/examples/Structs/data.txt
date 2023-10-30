@@ -1,0 +1,11 @@
+husband {
+    first_name: "Peter"
+    last_name: "Parker"
+    age: 25
+}
+wife {
+    first_name: "Mary"
+    last_name: "Jane"
+    age: 24
+}
+number_of_kids: 452

@@ -6,6 +6,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+type (
+	HintMap  map[int]TypeHint
+	TypeHint interface {
+		Apply(value any) (any, error)
+	}
+)
+
+func (h HintMap) Apply(value any) (any, error) {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return nil, errors.New("could get byte slice value for hint")
+	}
+	return parseToMapWithHints(bytes, h)
+}
+
 type IntEncoding uint8
 
 const (
@@ -75,13 +90,6 @@ func (h NumericHint) Apply(value any) (any, error) {
 	}
 }
 
-type (
-	TypeHint interface {
-		Apply(value any) (any, error)
-	}
-	HintEnum[T ~int] struct{}
-)
-
 type ByteSliceHint string
 
 const (
@@ -104,6 +112,8 @@ func (h ByteSliceHint) Apply(value any) (any, error) {
 		return nil, fmt.Errorf("invalid byte slice hint: %q", string(h))
 	}
 }
+
+type HintEnum[T ~int] struct{}
 
 func (h HintEnum[T]) Apply(value any) (any, error) {
 	switch v := value.(type) {
