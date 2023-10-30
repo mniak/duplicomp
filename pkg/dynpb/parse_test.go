@@ -2,10 +2,8 @@ package dynpb
 
 import (
 	_ "embed"
-	"fmt"
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -26,7 +24,7 @@ func TestParseProto_Example_Basic(t *testing.T) {
 	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
 
-	expected := []IndexedProtoValue{
+	expected := ProtoMap{
 		// int32
 		{
 			Index: 1,
@@ -67,6 +65,7 @@ func TestParseProto_Example_Basic(t *testing.T) {
 			},
 		},
 	}
+
 	assert.Equal(t, expected, parsed)
 }
 
@@ -79,7 +78,7 @@ func TestParseProto_Example_Integers(t *testing.T) {
 	// intN and sfixedN uses two's-complement encoding
 	// sintN and sfixedN uses zigzag encoding
 	// https://protobuf.dev/programming-guides/encoding/#signed-ints
-	expected := []IndexedProtoValue{
+	expected := ProtoMap{
 		// intN uses two's-compement for negative numbers
 		{
 			Index: 1,
@@ -199,19 +198,6 @@ func TestParseProto_Example_Integers(t *testing.T) {
 		},
 	}
 
-	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
-		return v.Index, v.ProtoValue
-	})
-	parsedMap := lo.SliceToMap[IndexedProtoValue, int](parsed, func(v IndexedProtoValue) (int, ProtoValue) {
-		return v.Index, v.ProtoValue
-	})
-	for fieldnum, expval := range expectedMap {
-		t.Run(fmt.Sprintf("Field %d", fieldnum), func(t *testing.T) {
-			actual := parsedMap[fieldnum]
-			assert.Equal(t, expval, actual)
-		})
-	}
-
 	assert.Equal(t, expected, parsed)
 }
 
@@ -220,7 +206,7 @@ func TestParseProto_Example_Floats(t *testing.T) {
 	parsed, err := parseProtoBytes(ex.Bytes)
 	require.NoError(t, err)
 
-	expected := []IndexedProtoValue{
+	expected := ProtoMap{
 		// float
 		{
 			Index: 1,
@@ -251,19 +237,6 @@ func TestParseProto_Example_Floats(t *testing.T) {
 				Fixed64: EncodeDouble(-1.6180339887498),
 			},
 		},
-	}
-
-	expectedMap := lo.SliceToMap[IndexedProtoValue, int](expected, func(v IndexedProtoValue) (int, ProtoValue) {
-		return v.Index, v.ProtoValue
-	})
-	parsedMap := lo.SliceToMap[IndexedProtoValue, int](parsed, func(v IndexedProtoValue) (int, ProtoValue) {
-		return v.Index, v.ProtoValue
-	})
-	for fieldnum, expval := range expectedMap {
-		t.Run(fmt.Sprintf("Field %d", fieldnum), func(t *testing.T) {
-			actual := parsedMap[fieldnum]
-			assert.Equal(t, expval, actual)
-		})
 	}
 
 	assert.Equal(t, expected, parsed)
