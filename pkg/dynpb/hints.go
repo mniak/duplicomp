@@ -41,7 +41,14 @@ func (h HintStruct) Apply(value any) (any, error) {
 }
 
 func (h HintString) Apply(value any) (any, error) {
-	return value, nil
+	var result string
+	switch v := value.(type) {
+	case []byte:
+		result = string(v)
+	default:
+		return value, errors.New("could not appy hint: String")
+	}
+	return result, nil
 }
 
 func (h HintObject[T]) Apply(value any) (any, error) {
