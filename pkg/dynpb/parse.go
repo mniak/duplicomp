@@ -92,90 +92,84 @@ func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
 	return fields, err
 }
 
+func consumeValue(num protowire.Number, wiretype protowire.Type, b []byte) (ProtoValue, int, error) {
+	switch wiretype {
+	case protowire.VarintType:
+		v, length := protowire.ConsumeVarint(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse varint %d: %s", num, protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:   TypeVarint,
+			Varint: v,
+		}, length, nil
+	case protowire.Fixed32Type:
+		v, length := protowire.ConsumeFixed32(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse fixed32 %d: %s", num, protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:    TypeFixed32,
+			Fixed32: v,
+		}, length, nil
+	case protowire.Fixed64Type:
+		v, length := protowire.ConsumeFixed64(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse fixed64 %d: %s", num, protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:    TypeFixed64,
+			Fixed64: v,
+		}, length, nil
+	case protowire.BytesType:
+		v, length := protowire.ConsumeBytes(b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse bytes %d: %s", num, protowire.ParseError(length))
+		}
+		return ProtoValue{
+			Type:  TypeBytes,
+			Bytes: v,
+		}, length, nil
+	case protowire.StartGroupType:
+		g, length := protowire.ConsumeGroup(num, b)
+		if length < 0 {
+			return ProtoValue{}, length, fmt.Errorf("failed to parse group %d: %s", num, protowire.ParseError(length))
+		}
+		v, err := parseProtoBytes(g)
+		if err != nil {
+			return ProtoValue{}, length, err
+		}
+		return ProtoValue{
+			Type:  TypeGroup,
+			Group: v,
+		}, length, nil
+	default:
+		return ProtoValue{}, 0, fmt.Errorf("error parsing unknown field wire type: %v", wiretype)
+	}
+}
+
 func parseProtoBytes(b []byte) (ProtoMap, error) {
 	var result ProtoMap
 	const dec = 10
 	const hex = 16
 	for len(b) > 0 {
-		num, wtype, length := protowire.ConsumeTag(b)
+		num, wiretype, length := protowire.ConsumeTag(b)
 		if length < 0 {
 			return nil, errors.New("failed to consume tag")
 		}
 		b = b[length:]
 
-		switch wtype {
-		case protowire.VarintType:
-			var v uint64
-			v, length = protowire.ConsumeVarint(b)
-			if length < 0 {
-				return nil, fmt.Errorf("failed to parse varint %d: %s", num, protowire.ParseError(length))
-			}
-			result = append(result, IndexedProtoValue{
-				Index: int(num),
-				ProtoValue: ProtoValue{
-					Type:   TypeVarint,
-					Varint: v,
-				},
-			})
-		case protowire.Fixed32Type:
-			var v uint32
-			v, length = protowire.ConsumeFixed32(b)
-			if length < 0 {
-				return nil, fmt.Errorf("failed to parse fixed32 %d: %s", num, protowire.ParseError(length))
-			}
-			result = append(result, IndexedProtoValue{
-				Index: int(num),
-				ProtoValue: ProtoValue{
-					Type:    TypeFixed32,
-					Fixed32: v,
-				},
-			})
-		case protowire.Fixed64Type:
-			var v uint64
-			v, length = protowire.ConsumeFixed64(b)
-			if length < 0 {
-				return nil, fmt.Errorf("failed to parse fixed64 %d: %s", num, protowire.ParseError(length))
-			}
-			result = append(result, IndexedProtoValue{
-				Index: int(num),
-				ProtoValue: ProtoValue{
-					Type:    TypeFixed64,
-					Fixed64: v,
-				},
-			})
-		case protowire.BytesType:
-			var v []byte
-			v, length = protowire.ConsumeBytes(b)
-			if length < 0 {
-				return nil, fmt.Errorf("failed to parse bytes %d: %s", num, protowire.ParseError(length))
-			}
-			result = append(result, IndexedProtoValue{
-				Index: int(num),
-				ProtoValue: ProtoValue{
-					Type:  TypeBytes,
-					Bytes: v,
-				},
-			})
-		case protowire.StartGroupType:
-			var g []byte
-			g, length = protowire.ConsumeGroup(num, b)
-			if length < 0 {
-				return nil, fmt.Errorf("failed to parse group %d: %s", num, protowire.ParseError(length))
-			}
-			v, err := parseProtoBytes(g)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, IndexedProtoValue{
-				Index: int(num),
-				ProtoValue: ProtoValue{
-					Type:  TypeGroup,
-					Group: v,
-				},
-			})
-		default:
-			return nil, fmt.Errorf("error parsing unknown field wire type: %v", wtype)
+		var err error
+		var pval ProtoValue
+		pval, length, err = consumeValue(num, wiretype, b)
+		if err != nil {
+			return nil, err
 		}
+
+		result = append(result, IndexedProtoValue{
+			Index:      int(num),
+			ProtoValue: pval,
+		})
 
 		b = b[length:]
 	}

@@ -1,7 +1,5 @@
-list_of_numbers: 5
-list_of_numbers: 4
 list_of_numbers: 3
-list_of_numbers: 2
-list_of_numbers: 1
+list_of_numbers: 270
+list_of_numbers: 86942
 list_of_strings: "Os ursinhos carinhosos"
 list_of_strings: "Estão aí pra ajudar"
