@@ -14,21 +14,6 @@ const (
 	ZigZag         IntEncoding = 2
 )
 
-// func getIntValue(value any) (uint64, error) {
-// 	switch v := value.(type) {
-// 	case int32:
-// 		return uint64(v), nil
-// 	case uint32:
-// 		return uint64(v), nil
-// 	case int64:
-// 		return uint64(v), nil
-// 	case uint64:
-// 		return uint64(v), nil
-// 	default:
-// 		return 0, errors.New("failed to read value as integer")
-// 	}
-// }
-
 type IntegerHint string
 
 const (
@@ -78,8 +63,6 @@ func (h IntegerHint) Apply(value any) (any, error) {
 
 	// case HintFloat:
 	// 	return float(val), nil
-	// case HintString:
-	// 	return string(val), nil
 	case HintBool:
 		return val != 0, nil
 
@@ -94,62 +77,6 @@ type (
 	}
 	HintEnum[T ~int] struct{}
 )
-
-// func (h hintIntZigZag) Apply(value any) (any, error) {
-// 	switch v := value.(type) {
-// 	case int32:
-// 		return uint32(DecodeZigZag(uint64(v))), nil
-// 	case uint32:
-// 		return uint32(DecodeZigZag(uint64(v))), nil
-// 	case int64:
-// 		return uint64(DecodeZigZag(uint64(v))), nil
-// 	case uint64:
-// 		return uint64(DecodeZigZag(uint64(v))), nil
-// 	default:
-// 		return 0, errors.New("could not appy hint: Int (zig-zag)")
-// 	}
-// }
-
-// func (h hintIntTwosComplement) Apply(value any) (any, error) {
-// 	switch v := value.(type) {
-// 	case uint32:
-// 		return int32(v), nil
-// 	case uint64:
-// 		return int64(v), nil
-// 	default:
-// 		return value, errors.New("could not appy hint: Int")
-// 	}
-// }
-
-// func (h hintIntUnsigned) Apply(value any) (any, error) {
-// 	switch v := value.(type) {
-// 	case int32:
-// 		return uint32(v), nil
-// 	case uint32:
-// 		return v, nil
-// 	case int64:
-// 		return uint64(v), nil
-// 	case uint64:
-// 		return v, nil
-// 	default:
-// 		return value, errors.New("could not appy hint: Int")
-// 	}
-// }
-
-// func (h HintInt) Apply(value any) (any, error) {
-// 	switch h.Encoding {
-// 	case ZigZag:
-// 		return hintIntZigZag{}.Apply(value)
-// 	case TwosComplement:
-// 		return hintIntTwosComplement{}.Apply(value)
-// 	default:
-// 		return hintIntUnsigned{}.Apply(value)
-// 	}
-// }
-
-// func (h HintFloat) Apply(value any) (any, error) {
-// 	return value, errors.New("could not appy hint: Float")
-// }
 
 type ByteSliceHint string
 
@@ -173,21 +100,6 @@ func (h ByteSliceHint) Apply(value any) (any, error) {
 		return nil, fmt.Errorf("invalid byte slice hint: %q", string(h))
 	}
 }
-
-// func (h HintBool) Apply(value any) (any, error) {
-// 	switch v := value.(type) {
-// 	case int32:
-// 		return v != 0, nil
-// 	case uint32:
-// 		return v != 0, nil
-// 	case int64:
-// 		return v != 0, nil
-// 	case uint64:
-// 		return v != 0, nil
-// 	default:
-// 		return value, errors.New("could not appy hint: Bool")
-// 	}
-// }
 
 func (h HintEnum[T]) Apply(value any) (any, error) {
 	switch v := value.(type) {
