@@ -301,7 +301,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := map[int]any{
-			// int32
+			// int
 			1: int(79),
 			// String
 			2: string("Howdy, planet!"),
