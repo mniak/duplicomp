@@ -2,6 +2,7 @@ package samples
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mniak/duplicomp/internal/samples/grpc"
 	"github.com/mniak/duplicomp/log2"
@@ -23,6 +24,6 @@ func (h defaultServerHandler) Handle(ctx context.Context, ping *grpc.Ping) (*grp
 
 	return &grpc.Pong{
 		Reply:    ping.Message,
-		ServedBy: ptr("Default Server Handler"),
+		ServedBy: ptr(fmt.Sprintf("Default Server Handler v%s", ApplicationVersion)),
 	}, nil
 }

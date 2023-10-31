@@ -13,9 +13,11 @@ import (
 func main() {
 	var port int
 	flag.IntVar(&port, "port", 9000, "TCP port to listen")
+	flag.StringVar(&samples.ApplicationVersion, "version", "v1.0", "Set application version")
 	flag.Parse()
 
-	stop := lo.Must(samples.RunServer(samples.WithPort(port)))
+	p := samples.WithPort(port)
+	stop := lo.Must(samples.RunServer(p))
 
 	wait(syscall.SIGINT, syscall.SIGTERM)
 	stop.Stop()

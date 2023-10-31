@@ -58,9 +58,8 @@ func buildOptions(opts ..._Option) _Options {
 
 func defaultOptions() *_Options {
 	return &_Options{
-		Port:   9000,
-		Logger: log2.FromWriter(os.Stdout),
-		// Logger:        noop.Logger(),
+		Port:          9000,
+		Logger:        log2.FromWriter(os.Stdout),
 		ServerHandler: defaultServerHandler{logger: noop.Logger()},
 	}
 }

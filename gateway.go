@@ -21,7 +21,6 @@ type GatewayParams struct {
 type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
 
 func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
-
 	return h(ctx, method, serverStream)
 }
 
@@ -68,7 +67,7 @@ func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Compara
 		return nil, err
 	}
 	cb.OnFailure(func() { shadowConnection.Close() })
-	logger.Printf("shadow connection established to %s", primaryTarget)
+	logger.Printf("shadow connection established to %s", shadowTarget)
 
 	cb.Succeeded()
 
