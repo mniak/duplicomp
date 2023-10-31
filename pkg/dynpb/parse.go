@@ -7,7 +7,6 @@ import (
 
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/protowire"
-	"google.golang.org/protobuf/proto"
 )
 
 type ProtoType string
@@ -86,11 +85,11 @@ func (pm ProtoMap) ProtoMapToMap() Object {
 	})
 }
 
-func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
-	unknownBytes := m.ProtoReflect().GetUnknown()
-	fields, err := parseProtoBytes(unknownBytes)
-	return fields, err
-}
+// func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
+// 	unknownBytes := m.ProtoReflect().GetUnknown()
+// 	fields, err := parseProtoBytes(unknownBytes)
+// 	return fields, err
+// }
 
 func parseNumericValue(type_ ProtoType, b []byte) (ProtoValue, int, error) {
 	switch type_ {
@@ -218,7 +217,7 @@ type (
 	}
 )
 
-func parseToMapWithHints(data []byte, hints HintMap) (Object, error) {
+func ParseWithHints(data []byte, hints HintMap) (Object, error) {
 	if hints == nil {
 		hints = make(HintMap)
 	}

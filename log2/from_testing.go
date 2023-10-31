@@ -11,7 +11,7 @@ func (l *testingLogger) Printf(format string, args ...interface{}) {
 	l.t.Logf(format, args...)
 }
 
-func (l *testingLogger) Println(args ...interface{}) {
+func (l *testingLogger) Print(args ...interface{}) {
 	l.t.Helper()
 	l.t.Log(args...)
 }

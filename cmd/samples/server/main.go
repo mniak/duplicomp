@@ -17,8 +17,12 @@ func main() {
 
 	stop := lo.Must(samples.RunServer(samples.WithPort(port)))
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	<-sigs
+	wait(syscall.SIGINT, syscall.SIGTERM)
 	stop.Stop()
+}
+
+func wait(signals ...os.Signal) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, signals...)
+	<-sigs
 }

@@ -62,7 +62,7 @@ func (self *StreamWithShadow) Receive() (proto.Message, error) {
 		)
 
 		if compareError != nil {
-			self.Logger.Println(errors.WithMessage(compareError, "comparison failed"))
+			self.Logger.Print(errors.WithMessage(compareError, "comparison failed"))
 		}
 	}()
 

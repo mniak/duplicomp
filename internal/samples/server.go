@@ -26,7 +26,7 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 		options: o,
 	}
 
-	o.Logger.Println("Server Started. Waiting for calls.")
+	o.Logger.Print("Server Started. Waiting for calls.")
 	server := g.NewServer()
 	grpc.RegisterPingerServer(server, pinger)
 
@@ -34,10 +34,10 @@ func RunServer(opts ..._Option) (stop Stoppable, err error) {
 		server.Serve(lis)
 	}()
 	return stoppable(func() {
-		o.Logger.Println("Stopping gRPC server")
+		o.Logger.Print("Stopping gRPC server")
 		server.GracefulStop()
 		lis.Close()
-		o.Logger.Println("Listener stopped")
+		o.Logger.Print("Listener stopped")
 	}), nil
 }
 

@@ -68,7 +68,7 @@ func TestGateway_HappyPath(t *testing.T) {
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
 	mockComparator := NewMockComparator(ctrl)
-	mainLogger.Println("Starting gateway")
+	mainLogger.Print("Starting gateway")
 	stopGw, err := duplicomp.StartNewGateway(
 		fmt.Sprintf(":%d", GATEWAY_PORT),
 		fmt.Sprintf(":%d", PRIMARY_PORT),

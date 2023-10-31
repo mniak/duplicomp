@@ -21,7 +21,7 @@ func (h HintMap) Apply(current any, newValue ProtoValue) (any, error) {
 	if !ok {
 		return nil, errors.New("could not get byte slice value for hint")
 	}
-	return parseToMapWithHints(bytes, h)
+	return ParseWithHints(bytes, h)
 }
 
 type IntEncoding uint8

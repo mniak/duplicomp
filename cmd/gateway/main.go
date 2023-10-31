@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 	"syscall"
 
 	"github.com/mniak/duplicomp"
@@ -30,4 +31,10 @@ func main() {
 
 	wait(syscall.SIGTERM, syscall.SIGINT)
 	stopGw.GracefulStop()
+}
+
+func wait(signals ...os.Signal) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, signals...)
+	<-sigs
 }

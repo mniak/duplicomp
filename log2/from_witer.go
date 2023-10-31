@@ -10,10 +10,10 @@ type writerLogger struct {
 }
 
 func (l *writerLogger) Printf(format string, args ...interface{}) {
-	fmt.Fprintf(l.w, format, args...)
+	fmt.Fprintf(l.w, format+"\n", args...)
 }
 
-func (l *writerLogger) Println(args ...interface{}) {
+func (l *writerLogger) Print(args ...interface{}) {
 	fmt.Fprintln(l.w, args...)
 }
 

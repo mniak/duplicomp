@@ -235,7 +235,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 	ex := LoadExample("Basic")
 
 	t.Run("No hints", func(t *testing.T) {
-		parsed, err := parseToMapWithHints(ex.Bytes, make(HintMap))
+		parsed, err := ParseWithHints(ex.Bytes, make(HintMap))
 		require.NoError(t, err)
 
 		expected := map[int]any{
@@ -257,7 +257,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 		const YELLOW Color1 = 2
 		const BLUE Color1 = 1
 
-		parsed, err := parseToMapWithHints(ex.Bytes, HintMap{
+		parsed, err := ParseWithHints(ex.Bytes, HintMap{
 			1: HintInt32,
 			2: HintString,
 			3: HintBool,
@@ -283,7 +283,7 @@ func TestParseToMapWithHints_Example_Basic(t *testing.T) {
 
 func TestParseToMapWithHints_Example_Integers(t *testing.T) {
 	ex := LoadExample("Integers")
-	parsed, err := parseToMapWithHints(
+	parsed, err := ParseWithHints(
 		ex.Bytes,
 		HintMap{
 			// intN uses two's-complement for negative numbers
@@ -344,7 +344,7 @@ func TestParseToMapWithHints_Example_Integers(t *testing.T) {
 
 func TestParseToMapWithHints_Example_Floats(t *testing.T) {
 	ex := LoadExample("Floats")
-	parsed, err := parseToMapWithHints(
+	parsed, err := ParseWithHints(
 		ex.Bytes,
 		HintMap{
 			1: HintFloat,
@@ -369,7 +369,7 @@ func TestParseToMapWithHints_Example_Floats(t *testing.T) {
 
 func TestParseToMapWithHints_Example_Structs(t *testing.T) {
 	ex := LoadExample("Structs")
-	parsed, err := parseToMapWithHints(
+	parsed, err := ParseWithHints(
 		ex.Bytes,
 		HintMap{
 			1: HintMap{
@@ -406,7 +406,7 @@ func TestParseToMapWithHints_Example_Structs(t *testing.T) {
 
 func TestParseToMapWithHints_Example_Lists(t *testing.T) {
 	ex := LoadExample("Lists")
-	parsed, err := parseToMapWithHints(
+	parsed, err := ParseWithHints(
 		ex.Bytes,
 		HintMap{
 			1: HintPackedList{HintInt32, TypeVarint},
