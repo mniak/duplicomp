@@ -5,12 +5,22 @@ import (
 	"log"
 	"os"
 	"syscall"
+	"time"
 
 	"github.com/mniak/duplicomp"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/rs/zerolog"
 )
 
 func main() {
+	logger := zerolog.New(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.RFC3339,
+	}).
+		Level(zerolog.TraceLevel).With().
+		Timestamp().
+		Caller().
+		Logger()
+
 	var listenAddress string
 	var primaryTarget string
 	var shadowTarget string
@@ -20,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	cmp := LogComparator{
-		logger: log2.Sub(log2.FromWriter(os.Stdout), "[Comparator] "),
+		logger: logger,
 	}
 
 	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget, cmp)

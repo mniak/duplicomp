@@ -2,30 +2,37 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"io"
 
-	"github.com/mniak/duplicomp/log2"
 	"github.com/mniak/duplicomp/pkg/dynpb"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 type LogComparator struct {
-	logger log2.Logger
+	logger zerolog.Logger
 }
 
 func (lc LogComparator) Compare(
 	primaryMsg []byte, primaryError error,
 	shadowMsg []byte, shadowError error,
 ) error {
-	if primaryError != nil {
-		if shadowError != primaryError {
-		}
+	if primaryError == io.EOF && shadowError == io.EOF {
+		return nil
 	}
+
 	if shadowError != primaryError {
-		lc.logger.Printf("Errors not match",
-			"primary_error", primaryError,
-			"shadow_error", shadowError,
-		)
+		e := lc.logger.Info().
+			AnErr("primary_error", primaryError).
+			AnErr("shadow_error", shadowError)
+		switch {
+		case primaryError == io.EOF:
+			e.Msg("message received from shadow after the primary connection was closed")
+		case shadowError == io.EOF:
+			e.Msg("shadow connection was closed before the primary")
+		default:
+			e.Msg("Errors dont match")
+		}
 		return nil
 	}
 
@@ -43,12 +50,17 @@ func (lc LogComparator) Compare(
 	diffs := CompareMaps(primaryData, shadowData)
 	var attrs []any
 	flatDiffs := FlattenDifferences(nil, diffs)
-	var sb strings.Builder
+
+	l := lc.logger.Info()
 	for _, diff := range flatDiffs {
-		fmt.Fprintf(&sb, "%s=%v, ", diff.KeyPath.String(), diff.Message)
+		l.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
 	}
 	if len(attrs) > 0 {
-		lc.logger.Print("the two messages are different", sb.String())
+		l.Bool("has_differences", true).Msg("the two messages are different")
+	} else {
+		lc.logger.Debug().
+			Bool("has_differences", false).
+			Msg("the two messages are equal")
 	}
 
 	return nil
