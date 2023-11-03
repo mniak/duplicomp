@@ -31,7 +31,7 @@ func (lc LogComparator) Compare(
 		case shadowError == io.EOF:
 			e.Msg("shadow connection was closed before the primary")
 		default:
-			e.Msg("Errors dont match")
+			e.Msg("errors dont match")
 		}
 		return nil
 	}
