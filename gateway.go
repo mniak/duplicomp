@@ -66,7 +66,9 @@ func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Compara
 		logger.Printf("failed to establish shadow connection to %s", primaryTarget)
 		return nil, err
 	}
-	cb.OnFailure(func() { shadowConnection.Close() })
+	cb.OnFailure(func() {
+		shadowConnection.Close()
+	})
 	logger.Printf("shadow connection established to %s", shadowTarget)
 
 	cb.Succeeded()
