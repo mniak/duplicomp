@@ -31,8 +31,8 @@ func CompareMaps(mapLeft, mapRight map[Key]Value) Differences {
 	return result
 }
 
-func compareMapValues(key Key, mapLeft, mapRight map[Key]Value) (ValueDiff, bool) {
-	diff := ValueDiff{
+func compareMapValues(key Key, mapLeft, mapRight map[Key]Value) (Difference, bool) {
+	diff := Difference{
 		Key: key,
 	}
 
@@ -79,7 +79,7 @@ func compareMapValues(key Key, mapLeft, mapRight map[Key]Value) (ValueDiff, bool
 		diff.Difference = SubfieldsAreDifferent
 		return diff, true
 	}
-	return ValueDiff{}, false
+	return Difference{}, false
 }
 
 type KeyPath []int
