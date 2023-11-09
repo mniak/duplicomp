@@ -1,29 +1,29 @@
 package diff
 
-type DiffKind string
+type Kind string
 
 const (
-	ValuesAreDifferent    DiffKind = "values differ"
-	SubfieldsAreDifferent DiffKind = "subfields differ"
+	ValuesAreDifferent    Kind = "values differ"
+	SubfieldsAreDifferent Kind = "subfields differ"
 
-	RightIsMissing DiffKind = "right is missing"
-	RightIsObject  DiffKind = "right is object, left is not"
+	RightIsMissing Kind = "right is missing"
+	RightIsObject  Kind = "right is object, left is not"
 
-	LeftIsMissing DiffKind = "left is missing"
-	LeftIsObject  DiffKind = "left is object, right is not"
+	LeftIsMissing Kind = "left is missing"
+	LeftIsObject  Kind = "left is object, right is not"
 )
 
 type (
 	Value       = any
 	Key         = int
 	Unit        = struct{}
-	Differences = []Difference
+	Differences []Difference
 )
 
 type Difference struct {
 	Key            Key         `json:"key"`
 	Left           Value       `json:"left"`
 	Right          Value       `json:"right"`
-	Difference     DiffKind    `json:"diff"`
+	Difference     Kind        `json:"diff"`
 	SubDifferences Differences `json:"sub,omitempty"`
 }

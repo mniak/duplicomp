@@ -1,10 +1,8 @@
 package diff
 
 import (
-	"fmt"
 	"reflect"
 	"slices"
-	"strings"
 
 	"golang.org/x/exp/maps"
 )
@@ -80,42 +78,4 @@ func compareMapValues(key Key, mapLeft, mapRight map[Key]Value) (Difference, boo
 		return diff, true
 	}
 	return Difference{}, false
-}
-
-type KeyPath []int
-
-func (kp KeyPath) String() string {
-	var sb strings.Builder
-	for i, p := range kp {
-		if i != 0 {
-			sb.WriteRune('.')
-		}
-		fmt.Fprintf(&sb, "%d", p)
-	}
-	return sb.String()
-}
-
-type FlatDifference struct {
-	Path       KeyPath
-	Difference DiffKind
-}
-
-func FlattenDifferences(keyPath KeyPath, diffs Differences) []FlatDifference {
-	return flattenDifferences(KeyPath{}, diffs)
-}
-
-func flattenDifferences(keyPath KeyPath, diffs Differences) []FlatDifference {
-	var result []FlatDifference
-	for _, diff := range diffs {
-		keyPath = append(keyPath, diff.Key)
-		if len(diff.SubDifferences) > 0 {
-			flattenDifferences(keyPath, diff.SubDifferences)
-		} else {
-			result = append(result, FlatDifference{
-				Path:       append(keyPath, diff.Key),
-				Difference: diff.Difference,
-			})
-		}
-	}
-	return result
 }
