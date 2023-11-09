@@ -14,6 +14,7 @@ type LogComparator struct {
 }
 
 func (lc LogComparator) Compare(
+	methodName string,
 	primaryMsg []byte, primaryError error,
 	shadowMsg []byte, shadowError error,
 ) error {
@@ -48,16 +49,15 @@ func (lc LogComparator) Compare(
 	}
 
 	diffs := CompareMaps(primaryData, shadowData)
-	var attrs []any
 	flatDiffs := FlattenDifferences(nil, diffs)
 
-	l := lc.logger.Info()
+	evtInfo := lc.logger.Info()
 	for _, diff := range flatDiffs {
-		str := l.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
-		attrs = append(attrs, str)
+		evtInfo.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
 	}
-	if len(attrs) > 0 {
-		l.Bool("has_differences", true).Msg("the two messages are different")
+	if len(flatDiffs) > 0 {
+		evtInfo.Bool("has_differences", true).
+			Msg("the two messages are different")
 	} else {
 		lc.logger.Debug().
 			Bool("has_differences", false).
