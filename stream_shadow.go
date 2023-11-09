@@ -71,13 +71,9 @@ type ReceivedMessage struct {
 }
 
 func (self *StreamWithShadow) shadowReceiveLoop() {
-	// log.Println("Loop wait started")
-	// log.Println("Loop started")
 	for primaryMsg := range self.shadowInputChan.Receiver() {
-		// log.Println("Ready to receive shadow message")
 
 		shadowMsg, shadowErr := self.Shadow.Receive()
-		// log.Println("After receiving shadow", primaryMsg.Message, shadowErr, shadowMsg, shadowErr)
 
 		var msgBytes []byte
 		if primaryMsg.Message != nil {
@@ -102,10 +98,7 @@ func (self *StreamWithShadow) shadowReceiveLoop() {
 func (self *StreamWithShadow) Receive() (proto.Message, error) {
 	self.init()
 
-	// log.Println("must receive 2")
 	msg, err := self.Primary.Receive()
-
-	// log.Println("After receiving primary", msg, err)
 
 	self.onceStartShadowReceiver.Do(func() {
 		go self.shadowReceiveLoop()
@@ -121,7 +114,6 @@ func (self *StreamWithShadow) Receive() (proto.Message, error) {
 		self.shadowInputChan.Close()
 	}
 
-	// log.Println("End of primary receive")
 	return msg, err
 }
 
@@ -146,15 +138,11 @@ func NewOverflowableChannel[T any](bufferSize int) OverflowableChannel[T] {
 func (self OverflowableChannel[T]) Send(val T) {
 	select {
 	case <-self.closedSignal:
-		// log.Println("channel closed, skipping")
 
 	default:
-		// log.Println("channel not closed, proceeding")
 		select {
 		case self.dataChan <- val:
-			// log.Println("data sent in channel")
 		default:
-			// log.Println("<<= channel overflow. will stop sending ==»")
 			self.Close()
 		}
 
