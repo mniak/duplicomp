@@ -142,15 +142,13 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 	fakeMessage := NewFakeProtoMessage(fakeMessageBytes)
 	require.NotNil(t, fakeMessage)
 	require.NotEmpty(t, fakeMessage)
-	// fakeError := errors.New(gofakeit.SentenceSimple())
-	fakeError := errors.New("fake error primary")
+	fakeError := errors.New(gofakeit.SentenceSimple())
 
 	fakeShadowMessageBytes := []byte(gofakeit.SentenceSimple())
 	fakeShadowMessage := NewFakeProtoMessage(fakeShadowMessageBytes)
 	require.NotNil(t, fakeShadowMessage)
 	require.NotEmpty(t, fakeShadowMessage)
-	// fakeShadowError := errors.New(gofakeit.SentenceSimple())
-	fakeShadowError := errors.New("fake error shadow")
+	fakeShadowError := errors.New(gofakeit.SentenceSimple())
 
 	require.NotEqual(t, fakeMessage, fakeShadowMessage)
 	require.NotEqual(t, &fakeMessage, &fakeShadowMessage)
