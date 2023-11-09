@@ -9,11 +9,22 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+type MessageBytesExtractor interface {
+	ExtractBytes(proto.Message) []byte
+}
+
+type SimpleMessageBytesExtractor struct{}
+
+func (SimpleMessageBytesExtractor) ExtractBytes(m proto.Message) []byte {
+	return m.ProtoReflect().GetUnknown()
+}
+
 type StreamWithShadow struct {
-	Primary    Stream
-	Shadow     Stream
-	Logger     log2.Logger
-	Comparator Comparator
+	Primary               Stream
+	Shadow                Stream
+	Logger                log2.Logger
+	Comparator            Comparator
+	MessageBytesExtractor MessageBytesExtractor
 
 	once sync.Once
 }
