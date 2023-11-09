@@ -21,7 +21,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/samples/client",
             "args": [
-                "--port", "9001",
+                "--port", "9091",
             ]
         },
         {
@@ -31,7 +31,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
             "args": [
-                "--listen-address", ":9091",
+                "--listen", ":9091",
                 "--target", ":9001",
                 "--shadow-target", ":9002",
             ],
@@ -44,7 +44,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
             "args": [
-                "--listen-address", ":50054",
+                "--listen", ":9091",
                 "--target", ":50053",
                 "--shadow-target", ":50053",
             ],

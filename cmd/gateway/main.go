@@ -1,14 +1,13 @@
 package main
 
 import (
-	"flag"
-	"log"
 	"os"
 	"syscall"
 	"time"
 
 	"github.com/mniak/duplicomp"
 	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -22,22 +21,36 @@ func main() {
 		Logger()
 
 	var listenAddress string
-	var primaryTarget string
-	var shadowTarget string
-	flag.StringVar(&listenAddress, "listen-address", ":9091", "TCP address to listen")
-	flag.StringVar(&primaryTarget, "target", ":9001", "Connection target")
-	flag.StringVar(&shadowTarget, "shadow-target", "", "Shadow connection target")
-	flag.Parse()
+	var primaryTarget duplicomp.Target
+	var shadowTarget duplicomp.Target
 
-	cmp := LogComparator{
-		logger: logger,
+	cmd := cobra.Command{
+		Use: "gateway",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmp := LogComparator{
+				logger: logger,
+			}
+
+			stopGw, err := duplicomp.StartNewGateway(
+				listenAddress,
+				primaryTarget,
+				shadowTarget,
+				cmp,
+			)
+			cobra.CheckErr(err)
+
+			wait(syscall.SIGTERM, syscall.SIGINT)
+			stopGw.GracefulStop()
+		},
 	}
 
-	stopGw, err := duplicomp.StartNewGateway(listenAddress, primaryTarget, shadowTarget, cmp)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	cmd.Flags().StringVar(&listenAddress, "listen", ":9091", "TCP address to listen on")
+	cmd.Flags().StringVar(&primaryTarget.Address, "target", "", "Connection target")
+	cmd.Flags().BoolVar(&primaryTarget.UseTLS, "target-tls", false, "Use TLS in connection target")
+	cmd.Flags().StringVar(&shadowTarget.Address, "shadow-target", "", "Shadow connection target")
+	cmd.Flags().BoolVar(&shadowTarget.UseTLS, "shadow-target-tls", false, "Use TLS in shadow connection target")
+	cmd.MarkFlagRequired("target")
+	cmd.MarkFlagRequired("shadow-target")
 
-	wait(syscall.SIGTERM, syscall.SIGINT)
-	stopGw.GracefulStop()
+	cmd.Execute()
 }

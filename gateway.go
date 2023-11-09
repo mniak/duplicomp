@@ -2,12 +2,14 @@ package duplicomp
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 
 	"github.com/mniak/duplicomp/log2"
 	"google.golang.org/grpc"
 
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -40,7 +42,7 @@ type _Gateway struct {
 	grpcServer GRPCServer
 }
 
-func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Comparator) (GracefulStopper, error) {
+func StartNewGateway(listenAddr string, primaryTarget, shadowTarget Target, cmp Comparator) (GracefulStopper, error) {
 	logger := log2.Sub(log.Default(), "[Gateway] ")
 	var cb PessimisticCallerback
 	defer cb.Callback()
@@ -53,7 +55,7 @@ func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Compara
 	cb.OnFailure(func() { listener.Close() })
 	logger.Printf("listener open at %s", listenAddr)
 
-	primaryConnection, err := ConnectionSpec{Address: primaryTarget}.Connect()
+	primaryConnection, err := primaryTarget.Connect()
 	if err != nil {
 		logger.Printf("failed to establish primary connection to %s", primaryTarget)
 		return nil, err
@@ -61,14 +63,12 @@ func StartNewGateway(listenAddr, primaryTarget, shadowTarget string, cmp Compara
 	cb.OnFailure(func() { primaryConnection.Close() })
 	logger.Printf("primary connection established to %s", primaryTarget)
 
-	shadowConnection, err := ConnectionSpec{Address: shadowTarget}.Connect()
+	shadowConnection, err := shadowTarget.Connect()
 	if err != nil {
 		logger.Printf("failed to establish shadow connection to %s", primaryTarget)
 		return nil, err
 	}
-	cb.OnFailure(func() {
-		shadowConnection.Close()
-	})
+	cb.OnFailure(func() { shadowConnection.Close() })
 	logger.Printf("shadow connection established to %s", shadowTarget)
 
 	cb.Succeeded()
@@ -139,12 +139,17 @@ func (self *grpcConnection) Close() {
 	}
 }
 
-type ConnectionSpec struct {
+type Target struct {
 	Address string
+	UseTLS  bool
 }
 
-func (self ConnectionSpec) Connect() (TargetConnection, error) {
+func (self Target) Connect() (TargetConnection, error) {
 	clientCredentials := insecure.NewCredentials()
+	if self.UseTLS {
+		clientCredentials = credentials.NewClientTLSFromCert(nil, "")
+	}
+
 	conn, err := grpc.Dial(self.Address,
 		grpc.WithTransportCredentials(clientCredentials),
 		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
@@ -155,4 +160,11 @@ func (self ConnectionSpec) Connect() (TargetConnection, error) {
 	return &grpcConnection{
 		conn: conn,
 	}, nil
+}
+
+func (self Target) String() string {
+	if self.UseTLS {
+		return fmt.Sprintf("🔒%s", self.Address)
+	}
+	return self.Address
 }

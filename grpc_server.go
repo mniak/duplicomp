@@ -90,7 +90,5 @@ func (self *GRPCServer) onConnectionAccepted(_ any, protoServer grpc.ServerStrea
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
 	serverStream := InOutStream(StreamFromProtobuf(protoServer))
-	// serverObservable := ObservableFromStream(ctx, server)
-
 	return self.ConnectionHandler.HandleConnection(ctx, method, serverStream)
 }
