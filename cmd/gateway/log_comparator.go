@@ -53,7 +53,8 @@ func (lc LogComparator) Compare(
 
 	l := lc.logger.Info()
 	for _, diff := range flatDiffs {
-		l.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
+		str := l.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
+		attrs = append(attrs, str)
 	}
 	if len(attrs) > 0 {
 		l.Bool("has_differences", true).Msg("the two messages are different")

@@ -1,43 +1,57 @@
 package duplicomp
 
 import (
+	"context"
+
 	"github.com/mniak/duplicomp/empty"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
+//go:generate mockgen -package=duplicomp -destination=mock_stream_test.go . Stream
 type Stream interface {
 	InputStream
 	OutputStream
+	MethodName() string
 }
 
 type inOutStream struct {
 	InputStream
 	OutputStream
+	method string
 }
 
-func InOutStream(in InputStream, out OutputStream) Stream {
+func InOutStream(in InputStream, out OutputStream, method string) Stream {
 	return &inOutStream{
 		InputStream:  in,
 		OutputStream: out,
+		method:       method,
 	}
 }
 
+func (self inOutStream) MethodName() string {
+	return self.method
+}
+
 type iProtoStream interface {
+	Context() context.Context
 	SendMsg(m interface{}) error
 	RecvMsg(m interface{}) error
 }
 
-func StreamFromProtobuf(s iProtoStream) (InputStream, OutputStream) {
-	str := protoStream{
+func StreamsFromProtobuf(s iProtoStream) Stream {
+	pstr := protoStream{
 		stream: s,
 	}
-	return &str, &str
+	method, _ := grpc.Method(s.Context())
+	return InOutStream(&pstr, &pstr, method)
 }
 
 type protoStream struct {
 	stream iProtoStream
+	method string
 }
 
 func (s *protoStream) Send(m proto.Message) error {

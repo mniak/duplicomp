@@ -49,6 +49,21 @@
                 "--shadow-target", ":50053",
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Gateway My Application",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/gateway",
+            "args": [
+                "--listen", ":50053",
+                "--target", "${env:MY_GRPC_APP}",
+                "--target-tls=true",
+                "--shadow-target", ":50052",
+                "--shadow-target-tls=false",
+            ],
+            "console": "integratedTerminal"
         }
     ]
 }

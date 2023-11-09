@@ -14,10 +14,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
+type LambdaConnectionHandler func(ctx context.Context, serverStream Stream) error
 
-func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
-	return h(ctx, method, serverStream)
+func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, serverStream Stream) error {
+	return h(ctx, serverStream)
 }
 
 type Gateway interface {
@@ -80,14 +80,14 @@ func StartNewGateway(listenAddr string, primaryTarget, shadowTarget Target, cmp 
 
 func (gw *_Gateway) Start() error {
 	gw.grpcServer = GRPCServer{
-		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, method string, serverStream Stream) error {
-			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, method)
+		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, serverStream Stream) error {
+			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, serverStream.MethodName())
 			if err != nil {
 				return err
 			}
 
 			shadowCtx := ContextWithDelay(ctx, time.Second*5)
-			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, method)
+			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, serverStream.MethodName())
 			if err != nil {
 				return err
 			}
@@ -124,7 +124,7 @@ func (self *grpcConnection) Stream(ctx context.Context, method string) (Stream, 
 	if err != nil {
 		return nil, err
 	}
-	stream := InOutStream(StreamFromProtobuf(protoStream))
+	stream := StreamsFromProtobuf(protoStream)
 	return stream, nil
 }
 

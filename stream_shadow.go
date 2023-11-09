@@ -22,6 +22,7 @@ func (SimpleMessageBytesExtractor) ExtractBytes(m proto.Message) []byte {
 }
 
 type StreamWithShadow struct {
+	Method                string
 	Primary               Stream
 	Shadow                Stream
 	Logger                log2.Logger
@@ -44,6 +45,10 @@ func (self *StreamWithShadow) init() {
 		}
 		self.shadowInputChan = NewOverflowableChannel[ReceivedMessage](self.BufferSize)
 	})
+}
+
+func (self *StreamWithShadow) MethodName() string {
+	return self.Method
 }
 
 func (self *StreamWithShadow) Send(m proto.Message) error {

@@ -34,6 +34,20 @@ func (m *MockStream) EXPECT() *MockStreamMockRecorder {
 	return m.recorder
 }
 
+// MethodName mocks base method.
+func (m *MockStream) MethodName() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MethodName")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// MethodName indicates an expected call of MethodName.
+func (mr *MockStreamMockRecorder) MethodName() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MethodName", reflect.TypeOf((*MockStream)(nil).MethodName))
+}
+
 // Receive mocks base method.
 func (m *MockStream) Receive() (protoreflect.ProtoMessage, error) {
 	m.ctrl.T.Helper()
