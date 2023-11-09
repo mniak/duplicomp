@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/mniak/duplicomp/log2"
 	"google.golang.org/grpc"
@@ -92,7 +93,8 @@ func (gw *_Gateway) Start() error {
 				return err
 			}
 
-			shadowUpstream, err := gw.ShadowConnection.Stream(ctx, method)
+			shadowCtx := ContextWithDelay(ctx, time.Second*5)
+			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, method)
 			if err != nil {
 				return err
 			}
