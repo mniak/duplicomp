@@ -30,7 +30,7 @@ type StreamWithShadow struct {
 	BufferSize            int
 
 	onceInit                sync.Once
-	shadowInputChan         OverflowableChannel[ReceivedMessage]
+	shadowInputChan         OverflowChannel[ReceivedMessage]
 	onceStartShadowReceiver sync.Once
 }
 
@@ -117,45 +117,4 @@ func (self *StreamWithShadow) Receive() (proto.Message, error) {
 	return msg, err
 }
 
-type OverflowableChannel[T any] struct {
-	dataChan     chan T
-	closedSignal chan struct{}
-	onceClose    sync.Once
-}
-
 const OverflowableChannelDefaultBufferSize = 2
-
-func NewOverflowableChannel[T any](bufferSize int) OverflowableChannel[T] {
-	if bufferSize < 1 {
-		bufferSize = OverflowableChannelDefaultBufferSize
-	}
-	return OverflowableChannel[T]{
-		dataChan:     make(chan T, bufferSize),
-		closedSignal: make(chan struct{}),
-	}
-}
-
-func (self OverflowableChannel[T]) Send(val T) {
-	select {
-	case <-self.closedSignal:
-
-	default:
-		select {
-		case self.dataChan <- val:
-		default:
-			self.Close()
-		}
-
-	}
-}
-
-func (self OverflowableChannel[T]) Close() {
-	self.onceClose.Do(func() {
-		close(self.closedSignal)
-		close(self.dataChan)
-	})
-}
-
-func (self OverflowableChannel[T]) Receiver() <-chan T {
-	return self.dataChan
-}
