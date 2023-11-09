@@ -1,4 +1,4 @@
-package main
+package diff
 
 import (
 	"fmt"
@@ -9,29 +9,21 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-type Difference struct {
-	Key            int
-	Left           any
-	Right          any
-	Message        string
-	SubDifferences []Difference
-}
-
-func CompareMaps(mapLeft, mapRight map[int]any) []Difference {
-	allkeysMap := make(map[int]struct{})
+func CompareMaps(mapLeft, mapRight map[Key]Value) Differences {
+	allkeysMap := make(map[Key]Unit)
 	for k := range mapLeft {
-		allkeysMap[k] = struct{}{}
+		allkeysMap[k] = Unit{}
 	}
 	for k := range mapRight {
-		allkeysMap[k] = struct{}{}
+		allkeysMap[k] = Unit{}
 	}
 
 	allKeys := maps.Keys(allkeysMap)
 	slices.Sort(allKeys)
 
-	var result []Difference
+	var result Differences
 	for _, key := range allKeys {
-		diff, hasDiff := CompareMapValues(key, mapLeft, mapRight)
+		diff, hasDiff := compareMapValues(key, mapLeft, mapRight)
 		if hasDiff {
 			result = append(result, diff)
 		}
@@ -39,8 +31,8 @@ func CompareMaps(mapLeft, mapRight map[int]any) []Difference {
 	return result
 }
 
-func CompareMapValues(key int, mapLeft, mapRight map[int]any) (Difference, bool) {
-	diff := Difference{
+func compareMapValues(key Key, mapLeft, mapRight map[Key]Value) (ValueDiff, bool) {
+	diff := ValueDiff{
 		Key: key,
 	}
 
@@ -59,35 +51,35 @@ func CompareMapValues(key int, mapLeft, mapRight map[int]any) (Difference, bool)
 
 	switch {
 	case hasValue1 && !hasValue2:
-		diff.Message = fmt.Sprintf("value present on the left but missing on the right")
+		diff.Difference = RightIsMissing
 		return diff, true
 	case !hasValue1 && hasValue2:
-		diff.Message = fmt.Sprintf("value present on the right but missing on the left")
+		diff.Difference = LeftIsMissing
 		return diff, true
 	}
 
-	objLeft, leftIsObject := left.(map[int]any)
-	objRight, rightIsObject := left.(map[int]any)
+	objLeft, leftIsObject := left.(map[Key]Value)
+	objRight, rightIsObject := left.(map[Key]Value)
 
 	switch {
 	case leftIsObject && !rightIsObject:
-		diff.Message = fmt.Sprintf("value on the left is object but on the right not")
+		diff.Difference = LeftIsObject
 		return diff, true
 	case !leftIsObject && rightIsObject:
-		diff.Message = fmt.Sprintf("value on the right is object but on the left not")
+		diff.Difference = RightIsObject
 		return diff, true
 	}
 	diff.SubDifferences = CompareMaps(objLeft, objRight)
 	if len(diff.SubDifferences) > 0 {
-		diff.Message = "there are differences on the subfields"
+		diff.Difference = ValuesAreDifferent
 		return diff, true
 	}
 
 	if !reflect.DeepEqual(left, right) {
-		diff.Message = "the values differ"
+		diff.Difference = SubfieldsAreDifferent
 		return diff, true
 	}
-	return Difference{}, false
+	return ValueDiff{}, false
 }
 
 type KeyPath []int
@@ -104,20 +96,24 @@ func (kp KeyPath) String() string {
 }
 
 type FlatDifference struct {
-	FieldPath KeyPath
-	Message   string
+	Path       KeyPath
+	Difference DiffKind
 }
 
-func FlattenDifferences(keyPath KeyPath, diffs []Difference) []FlatDifference {
+func FlattenDifferences(keyPath KeyPath, diffs Differences) []FlatDifference {
+	return flattenDifferences(KeyPath{}, diffs)
+}
+
+func flattenDifferences(keyPath KeyPath, diffs Differences) []FlatDifference {
 	var result []FlatDifference
 	for _, diff := range diffs {
 		keyPath = append(keyPath, diff.Key)
 		if len(diff.SubDifferences) > 0 {
-			FlattenDifferences(keyPath, diff.SubDifferences)
+			flattenDifferences(keyPath, diff.SubDifferences)
 		} else {
 			result = append(result, FlatDifference{
-				FieldPath: append(keyPath, diff.Key),
-				Message:   diff.Message,
+				Path:       append(keyPath, diff.Key),
+				Difference: diff.Difference,
 			})
 		}
 	}

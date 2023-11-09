@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/mniak/duplicomp/pkg/dynpb"
+	"github.com/mniak/duplicomp/pkg/dynpb/diff"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -48,25 +48,20 @@ func (lc LogComparator) Compare(
 		return errors.WithMessage(err, "failed to parse shadow message")
 	}
 
-	diffs := CompareMaps(primaryData, shadowData)
-	flatDiffs := FlattenDifferences(nil, diffs)
+	diffs := diff.CompareMaps(primaryData, shadowData)
 
 	var evt *zerolog.Event
-	if len(flatDiffs) > 0 {
+	if len(diffs) > 0 {
 		evt = lc.logger.Info()
 	} else {
 		evt = lc.logger.Debug()
 	}
 
-	evt.Bool("has differences", len(flatDiffs) > 0)
+	evt.Bool("has differences", len(diffs) > 0)
 	evt.Str("method", methodName)
-	evt.Any("diff", flatDiffs)
+	evt.Any("diff", diffs)
 
-	for _, diff := range flatDiffs {
-		evt.Str(fmt.Sprintf("field %s", diff.FieldPath.String()), diff.Message)
-	}
-
-	if len(flatDiffs) > 0 {
+	if len(diffs) > 0 {
 		evt.Msg("the two messages are different")
 	} else {
 		evt.Msg("the two messages are equal")
