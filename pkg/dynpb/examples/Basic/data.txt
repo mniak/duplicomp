@@ -1,0 +1,5 @@
+field_int32: 79
+field_string: "Howdy, planet!"
+field_bool_1: true
+field_bool_2: false
+field_enum: YELLOW

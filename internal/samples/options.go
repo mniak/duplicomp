@@ -1,20 +1,22 @@
 package samples
 
 import (
-	"context"
+	"fmt"
+	"log"
+	"os"
 
-	"github.com/mniak/duplicomp/internal/samples/internal"
+	"github.com/mniak/duplicomp/internal/noop"
+	"github.com/mniak/duplicomp/log2"
 )
 
-type _ServerHandler func(ctx context.Context, ping *internal.Ping) (*internal.Pong, error)
-
 type _Options struct {
-	ServerHandler _ServerHandler
 	Port          int
+	Logger        log2.Logger
+	ServerHandler ServerHandler
 }
 type _Option func(*_Options)
 
-func WithHandler(h _ServerHandler) _Option {
+func WithHandler(h ServerHandler) _Option {
 	return func(o *_Options) {
 		o.ServerHandler = h
 	}
@@ -23,6 +25,21 @@ func WithHandler(h _ServerHandler) _Option {
 func WithPort(port int) _Option {
 	return func(o *_Options) {
 		o.Port = port
+	}
+}
+
+func WithName(name string) _Option {
+	return func(o *_Options) {
+		o.Logger = log.New(os.Stdout, fmt.Sprintf("[%s] ", name), log.LstdFlags)
+	}
+}
+
+func WithLogger(logger log2.Logger) _Option {
+	return func(o *_Options) {
+		o.Logger = logger
+		if sh, is := o.ServerHandler.(defaultServerHandler); is {
+			sh.logger = logger
+		}
 	}
 }
 
@@ -41,7 +58,8 @@ func buildOptions(opts ..._Option) _Options {
 
 func defaultOptions() *_Options {
 	return &_Options{
-		ServerHandler: defaultServerHandler,
 		Port:          9000,
+		Logger:        log2.FromWriter(os.Stdout),
+		ServerHandler: defaultServerHandler{logger: noop.Logger()},
 	}
 }

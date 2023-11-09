@@ -1,52 +1,56 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"os"
+	"syscall"
+	"time"
 
 	"github.com/mniak/duplicomp"
-	"github.com/samber/lo"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	var params ProxyParams
-	flag.IntVar(&params.ListenPort, "listen-port", 9091, "TCP port to listen")
-	flag.StringVar(&params.PrimaryTarget, "target", ":9001", "Connection target")
-	flag.StringVar(&params.ShadowTarget, "shadow-target", "", "Shadow connection target")
-	flag.Parse()
+	logger := zerolog.New(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.RFC3339,
+	}).
+		Level(zerolog.TraceLevel).With().
+		Timestamp().
+		Caller().
+		Logger()
 
-	lo.Must0(StartProxy(params))
-}
+	var listenAddress string
+	var primaryTarget duplicomp.Target
+	var shadowTarget duplicomp.Target
 
-type ProxyParams struct {
-	ListenPort    int
-	PrimaryTarget string
-	ShadowTarget  string
-}
+	cmd := cobra.Command{
+		Use: "gateway",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmp := LogComparator{
+				logger: logger,
+			}
 
-func StartProxy(params ProxyParams) error {
-	proxy := duplicomp.NewGRPCProxy(duplicomp.ProxyConfig{
-		InboundConfig: duplicomp.InboundConfig{
-			ListenAddress: fmt.Sprintf(":%d", params.ListenPort),
+			stopGw, err := duplicomp.StartNewGateway(
+				listenAddress,
+				primaryTarget,
+				shadowTarget,
+				cmp,
+			)
+			cobra.CheckErr(err)
+
+			wait(syscall.SIGTERM, syscall.SIGINT)
+			stopGw.GracefulStop()
 		},
-		OutboundConfigs: []duplicomp.OutboundConfig{
-			{
-				TargetAddress: params.PrimaryTarget,
-			},
-			{
-				TargetAddress:  params.ShadowTarget,
-				IgnoreResponse: true,
-			},
-		},
-	})
+	}
 
-	err := proxy.Start()
-	if err != nil {
-		return err
-	}
-	err = proxy.Wait()
-	if err != nil {
-		return err
-	}
-	return nil
+	cmd.Flags().StringVar(&listenAddress, "listen", ":9091", "TCP address to listen on")
+	cmd.Flags().StringVar(&primaryTarget.Address, "target", "", "Connection target")
+	cmd.Flags().BoolVar(&primaryTarget.UseTLS, "target-tls", false, "Use TLS in connection target")
+	cmd.Flags().StringVar(&shadowTarget.Address, "shadow-target", "", "Shadow connection target")
+	cmd.Flags().BoolVar(&shadowTarget.UseTLS, "shadow-target-tls", false, "Use TLS in shadow connection target")
+	cmd.MarkFlagRequired("target")
+	cmd.MarkFlagRequired("shadow-target")
+
+	cmd.Execute()
 }

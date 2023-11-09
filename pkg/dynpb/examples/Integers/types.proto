@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+message Object {
+  optional int32 field_int32_pos = 1;
+  optional int32 field_int32_neg = 2;
+  optional int64 field_int64_pos = 3;
+  optional int64 field_int64_neg = 4;
+
+  optional uint32 field_uint32 = 5;
+  optional uint64 field_uint64 = 6;
+
+  optional sint32 field_sint32_pos = 7;
+  optional sint32 field_sint32_neg =  8;
+  optional sint64 field_sint64_pos =  9;
+  optional sint64 field_sint64_neg = 10;
+
+  optional fixed32 field_fixed32 = 11;
+  optional fixed64 field_fixed64 = 12;
+  
+  optional sfixed32 field_sfixed32_pos = 13;
+  optional sfixed32 field_sfixed32_neg = 14;
+  optional sfixed64 field_sfixed64_pos = 15;
+  optional sfixed64 field_sfixed64_neg = 16;
+}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,6 +18,11 @@ func TestClientConnectingToServer(t *testing.T) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	err := RunSendPing(WithPort(fakePort))
+	phrase := gofakeit.SentenceSimple()
+	pong, err := RunSendPing(phrase, WithPort(fakePort))
+
 	require.NoError(t, err)
+	require.NotNil(t, pong)
+
+	assert.Equal(t, phrase, *pong.Reply)
 }

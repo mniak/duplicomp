@@ -1,0 +1,4 @@
+field_float_pos: 3.1415926
+field_float_neg: -3.1415926
+field_double_pos: 1.6180339887498
+field_double_neg: -1.6180339887498

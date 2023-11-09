@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/sample/server",
+            "program": "${workspaceFolder}/cmd/samples/server",
             "args": [
                 "--port", "9001",
             ]
@@ -19,9 +19,9 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/sample/client",
+            "program": "${workspaceFolder}/cmd/samples/client",
             "args": [
-                "--port", "9001",
+                "--port", "9091",
             ]
         },
         {
@@ -31,9 +31,22 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
             "args": [
-                "--listen-port", "9091",
+                "--listen", ":9091",
                 "--target", ":9001",
                 "--shadow-target", ":9002",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Gateway (twice target 50053)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/gateway",
+            "args": [
+                "--listen", ":9091",
+                "--target", ":50053",
+                "--shadow-target", ":50053",
             ],
             "console": "integratedTerminal"
         }

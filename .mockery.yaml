@@ -1,8 +1,0 @@
-with-expecter: true
-packages:
-  github.com/mniak/duplicomp:
-    config:
-      dir: mocks
-      outpkg: mocks
-    interfaces:
-      Stream:

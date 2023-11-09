@@ -1,14 +1,27 @@
 package duplicomp
 
 import (
+	"github.com/mniak/duplicomp/empty"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
-//go:generate mockgen -package=duplicomp -destination=mock_stream_test.go . Stream
 type Stream interface {
-	Send(m proto.Message) error
-	Receive() (proto.Message, error)
+	InputStream
+	OutputStream
+}
+
+type inOutStream struct {
+	InputStream
+	OutputStream
+}
+
+func InOutStream(in InputStream, out OutputStream) Stream {
+	return &inOutStream{
+		InputStream:  in,
+		OutputStream: out,
+	}
 }
 
 type iProtoStream interface {
@@ -16,10 +29,11 @@ type iProtoStream interface {
 	RecvMsg(m interface{}) error
 }
 
-func NewProtoStream(s iProtoStream) Stream {
-	return &protoStream{
+func StreamFromProtobuf(s iProtoStream) (InputStream, OutputStream) {
+	str := protoStream{
 		stream: s,
 	}
+	return &str, &str
 }
 
 type protoStream struct {
@@ -31,8 +45,15 @@ func (s *protoStream) Send(m proto.Message) error {
 	return err
 }
 
+type MyMessageType struct{}
+
+func buildDescriptor() protoreflect.MessageDescriptor {
+	return protoimpl.X.MessageDescriptorOf(&empty.Empty{})
+}
+
 func (s *protoStream) Receive() (proto.Message, error) {
-	msg := new(emptypb.Empty)
-	err := s.stream.RecvMsg(&msg)
+	// msg := dynamicpb.NewMessage(buildDescriptor())
+	msg := new(empty.Empty)
+	err := s.stream.RecvMsg(msg)
 	return msg, err
 }

@@ -1,0 +1,11 @@
+list_of_packed_numbers: 1
+list_of_non_packed_numbers: 9
+list_of_packed_numbers: 302
+list_of_non_packed_numbers: 310
+list_of_strings: "Sphinx of black quartz, judge my vow"
+list_of_packed_numbers: 40003
+list_of_non_packed_numbers: 40011
+list_of_strings: "The five boxing wizards jump quickly"
+list_of_packed_numbers: 70004
+list_of_non_packed_numbers: 70012
+list_of_strings: "Pack my box with five dozen liquor jugs"

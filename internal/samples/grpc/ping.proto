@@ -1,3 +1,5 @@
+option go_package = "../grpc";
+
 service Pinger {
   rpc SendPing (Ping) returns (Pong) {}
 }
@@ -7,7 +9,6 @@ message Ping {
 }
 
 message Pong {
-  required string original_message = 1;
-  required string capitalized_message = 2;
-  required int32 random_number = 3;
+  required string reply = 1;
+  required string served_by = 2;
 }
