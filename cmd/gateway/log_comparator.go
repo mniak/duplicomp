@@ -1,17 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
+	"github.com/mniak/duplicomp/pkg/diff"
 	"github.com/mniak/duplicomp/pkg/dynpb"
-	"github.com/mniak/duplicomp/pkg/dynpb/diff"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 )
 
 type LogComparator struct {
-	logger zerolog.Logger
+	Logger           zerolog.Logger
+	AliasesPerMethod map[string]AliasTree
+	HintsPerMethod   map[string]dynpb.HintMap
 }
 
 func (lc LogComparator) Compare(
@@ -24,7 +27,7 @@ func (lc LogComparator) Compare(
 	}
 
 	if shadowError != primaryError {
-		e := lc.logger.Info().
+		e := lc.Logger.Info().
 			AnErr("primary_error", primaryError).
 			AnErr("shadow_error", shadowError)
 		switch {
@@ -38,7 +41,7 @@ func (lc LogComparator) Compare(
 		return nil
 	}
 
-	hints := dynpb.HintMap{}
+	hints := lc.HintsPerMethod[methodName]
 
 	primaryData, err := dynpb.ParseWithHints(primaryMsg, hints)
 	if err != nil {
@@ -51,20 +54,18 @@ func (lc LogComparator) Compare(
 
 	diffs := diff.CompareMaps(primaryData, shadowData)
 	flatDiffs := diffs.Flatten()
-	diffMap := DiffMap(flatDiffs, AliasTree{})
+	diffMap := DiffMap(flatDiffs, lc.AliasesPerMethod[methodName])
 
 	var evt *zerolog.Event
 	if len(diffMap) > 0 {
-		evt = lc.logger.Info()
+		evt = lc.Logger.Info()
 	} else {
-		evt = lc.logger.Debug()
+		evt = lc.Logger.Debug()
 	}
 
-	evt.Bool("differ", len(diffMap) > 0)
-	evt.Str("method", methodName)
-	evt.Any("diffs", diffs)
-	evt.Any("flat_diffs", flatDiffs)
-	evt.Any("diff_map", diffMap)
+	evt.Int("DifferenceCount", len(diffMap))
+	evt.Str("Method", methodName)
+	evt.Any("Diferences", diffMap)
 
 	if len(diffMap) > 0 {
 		evt.Msg("the two messages are different")
@@ -75,39 +76,12 @@ func (lc LogComparator) Compare(
 	return nil
 }
 
-type AliasTree map[int]AliasNode
-
-type AliasNode struct {
-	Alias string
-	Nodes AliasTree
-}
-
-func (node AliasNode) Find(indexes ...int) (string, bool) {
-	if len(indexes) == 0 {
-		return node.Alias, node.Alias != ""
-	}
-	return node.Nodes.Find(indexes[1:]...)
-}
-
-func (tree AliasTree) Find(indexes ...int) (string, bool) {
-	if tree == nil || len(indexes) == 0 {
-		return "", false
-	}
-	node, ok := tree[indexes[0]]
-	if !ok {
-		return "", false
-	}
-
-	return node.Find(indexes[1:]...)
-}
-
 func DiffMap(diffs []diff.FlatDifference, aliases AliasTree) map[string]diff.Kind {
 	result := lo.Associate[diff.FlatDifference, string, diff.Kind](diffs, func(item diff.FlatDifference) (string, diff.Kind) {
-		alias, ok := aliases.Find(item.Path...)
-		if !ok {
-			alias = item.Path.String()
-		}
-		return alias, item.Difference
+		path := item.Path.String()
+		alias, _ := aliases.GetAlias(item.Path...)
+		result := fmt.Sprintf("[%s] %s", path, alias)
+		return result, item.Difference
 	})
 
 	return result

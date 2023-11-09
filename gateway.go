@@ -93,6 +93,7 @@ func (gw *_Gateway) Start() error {
 			}
 
 			dualStream := StreamWithShadow{
+				Method:     method,
 				Primary:    primaryUpstream,
 				Shadow:     shadowUpstream,
 				Logger:     gw.Logger,

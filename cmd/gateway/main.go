@@ -20,6 +20,8 @@ func main() {
 		Caller().
 		Logger()
 
+	config := LoadConfig()
+
 	var listenAddress string
 	var primaryTarget duplicomp.Target
 	var shadowTarget duplicomp.Target
@@ -28,7 +30,9 @@ func main() {
 		Use: "gateway",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmp := LogComparator{
-				logger: logger,
+				Logger:           logger,
+				AliasesPerMethod: config.AliasesPerMethod(),
+				HintsPerMethod:   config.HintsPerMethod(),
 			}
 
 			stopGw, err := duplicomp.StartNewGateway(
