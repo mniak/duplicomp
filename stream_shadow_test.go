@@ -2,6 +2,7 @@ package duplicomp
 
 import (
 	"errors"
+	"io"
 	"sync"
 	"testing"
 	"time"
@@ -134,7 +135,7 @@ func TestStreamWithShadow_Send(t *testing.T) {
 	})
 }
 
-func TestStreamWithShadow_Receive(t *testing.T) {
+func TestStreamWithShadow_Receive_Realistic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -157,16 +158,42 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 	mockShadow := NewMockStream(ctrl)
 	mockComparator := NewMockComparator(ctrl)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	mockStream.EXPECT().Receive().Return(fakeMessage, fakeError)
-	mockShadow.EXPECT().Receive().
+	mockStream.EXPECT().
+		Receive().
+		Do(func() {
+			time.Sleep(200 * time.Millisecond)
+		}).
+		Return(fakeMessage, fakeError)
+	mockStream.EXPECT().Receive().Return(nil, io.EOF)
+
+	var waitShadow sync.WaitGroup
+	waitShadow.Add(2)
+	mockShadow.EXPECT().
+		Receive().
 		Do(func() {
 			time.Sleep(50 * time.Millisecond)
-			wg.Done()
+			waitShadow.Done()
 		}).
 		Return(fakeShadowMessage, fakeShadowError)
-	mockComparator.EXPECT().Compare(fakeMessageBytes, fakeError, fakeShadowMessageBytes, fakeShadowError)
+	mockShadow.EXPECT().
+		Receive().
+		Do(func() {
+			waitShadow.Done()
+		}).
+		Return(nil, io.EOF)
+
+	var waitComparator sync.WaitGroup
+	waitComparator.Add(2)
+	mockComparator.EXPECT().
+		Compare(fakeMessageBytes, fakeError, fakeShadowMessageBytes, fakeShadowError).
+		Do(func(_, _, _, _ any) {
+			waitComparator.Done()
+		})
+	mockComparator.EXPECT().
+		Compare(nil, io.EOF, nil, io.EOF).
+		Do(func(_, _, _, _ any) {
+			waitComparator.Done()
+		})
 
 	sut := StreamWithShadow{
 		Primary:    mockStream,
@@ -175,18 +202,21 @@ func TestStreamWithShadow_Receive(t *testing.T) {
 	}
 
 	startTime := time.Now()
-	msg, receiveErr := sut.Receive()
-	receiveDuration := time.Now().Sub(startTime)
+	receiveMsg1, receiveErr1 := sut.Receive()
+	receiveMsg2, receiveErr2 := sut.Receive()
 
-	wg.Wait()
-	receiveShadowDuration := time.Now().Sub(startTime)
+	receivePrimaryDuration := time.Now().Sub(startTime)
+	waitShadow.Wait()
+	receiveShadow1Duration := time.Now().Sub(startTime)
 
-	require.Equal(t, fakeError, receiveErr)
-	assert.Equal(t, fakeMessage, msg)
+	assert.Equal(t, fakeMessage, receiveMsg1)
+	assert.Equal(t, fakeError, receiveErr1)
 
-	assert.InDelta(t, 0, receiveDuration.Milliseconds(), 5)
-	assert.InDelta(t, 50, receiveShadowDuration.Milliseconds(), 5)
+	assert.Nil(t, receiveMsg2)
+	assert.Equal(t, io.EOF, receiveErr2)
 
-	// Wait for remaining calls in other goroutines
-	time.Sleep(500 * time.Millisecond)
+	assert.InDelta(t, 200, receivePrimaryDuration.Milliseconds(), 5)
+	assert.InDelta(t, 200+50, receiveShadow1Duration.Milliseconds(), 5)
+
+	waitComparator.Wait()
 }
