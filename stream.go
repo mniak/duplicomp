@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/mniak/duplicomp/empty"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"
@@ -14,7 +13,6 @@ import (
 type Stream interface {
 	InputStream
 	OutputStream
-	MethodName() string
 }
 
 type inOutStream struct {
@@ -23,16 +21,11 @@ type inOutStream struct {
 	method string
 }
 
-func InOutStream(in InputStream, out OutputStream, method string) Stream {
+func InOutStream(in InputStream, out OutputStream) Stream {
 	return &inOutStream{
 		InputStream:  in,
 		OutputStream: out,
-		method:       method,
 	}
-}
-
-func (self inOutStream) MethodName() string {
-	return self.method
 }
 
 type iProtoStream interface {
@@ -45,8 +38,7 @@ func StreamsFromProtobuf(s iProtoStream) Stream {
 	pstr := protoStream{
 		stream: s,
 	}
-	method, _ := grpc.Method(s.Context())
-	return InOutStream(&pstr, &pstr, method)
+	return InOutStream(&pstr, &pstr)
 }
 
 type protoStream struct {

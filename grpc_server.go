@@ -12,7 +12,7 @@ import (
 )
 
 type ConnectionHandler interface {
-	HandleConnection(ctx context.Context, serverStream Stream) error
+	HandleConnection(ctx context.Context, method string, serverStream Stream) error
 }
 
 type GRPCServer struct {
@@ -90,5 +90,5 @@ func (self *GRPCServer) onConnectionAccepted(_ any, protoServer grpc.ServerStrea
 	ctx = copyHeadersFromIncomingToOutcoming(ctx, ctx)
 
 	serverStream := StreamsFromProtobuf(protoServer)
-	return self.ConnectionHandler.HandleConnection(ctx, serverStream)
+	return self.ConnectionHandler.HandleConnection(ctx, method, serverStream)
 }

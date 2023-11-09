@@ -139,6 +139,7 @@ func TestStreamWithShadow_Receive_Realistic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	fakeMethod := gofakeit.BuzzWord()
 	fakeMessageBytes := []byte(gofakeit.SentenceSimple())
 	fakeMessage := NewFakeProtoMessage(fakeMessageBytes)
 	require.NotNil(t, fakeMessage)
@@ -185,17 +186,18 @@ func TestStreamWithShadow_Receive_Realistic(t *testing.T) {
 	var waitComparator sync.WaitGroup
 	waitComparator.Add(2)
 	mockComparator.EXPECT().
-		Compare(fakeMessageBytes, fakeError, fakeShadowMessageBytes, fakeShadowError).
-		Do(func(_, _, _, _ any) {
+		Compare(fakeMethod, fakeMessageBytes, fakeError, fakeShadowMessageBytes, fakeShadowError).
+		Do(func(_, _, _, _, _ any) {
 			waitComparator.Done()
 		})
 	mockComparator.EXPECT().
-		Compare(nil, io.EOF, nil, io.EOF).
-		Do(func(_, _, _, _ any) {
+		Compare(fakeMethod, nil, io.EOF, nil, io.EOF).
+		Do(func(_, _, _, _, _ any) {
 			waitComparator.Done()
 		})
 
 	sut := StreamWithShadow{
+		Method:     fakeMethod,
 		Primary:    mockStream,
 		Shadow:     mockShadow,
 		Comparator: mockComparator,

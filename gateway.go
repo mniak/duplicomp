@@ -14,10 +14,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type LambdaConnectionHandler func(ctx context.Context, serverStream Stream) error
+type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
 
-func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, serverStream Stream) error {
-	return h(ctx, serverStream)
+func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
+	return h(ctx, method, serverStream)
 }
 
 type Gateway interface {
@@ -80,14 +80,14 @@ func StartNewGateway(listenAddr string, primaryTarget, shadowTarget Target, cmp 
 
 func (gw *_Gateway) Start() error {
 	gw.grpcServer = GRPCServer{
-		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, serverStream Stream) error {
-			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, serverStream.MethodName())
+		ConnectionHandler: LambdaConnectionHandler(func(ctx context.Context, method string, serverStream Stream) error {
+			primaryUpstream, err := gw.PrimaryConnection.Stream(ctx, method)
 			if err != nil {
 				return err
 			}
 
 			shadowCtx := ContextWithDelay(ctx, time.Second*5)
-			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, serverStream.MethodName())
+			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, method)
 			if err != nil {
 				return err
 			}

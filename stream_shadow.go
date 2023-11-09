@@ -47,10 +47,6 @@ func (self *StreamWithShadow) init() {
 	})
 }
 
-func (self *StreamWithShadow) MethodName() string {
-	return self.Method
-}
-
 func (self *StreamWithShadow) Send(m proto.Message) error {
 	self.init()
 
@@ -90,6 +86,7 @@ func (self *StreamWithShadow) shadowReceiveLoop() {
 		}
 
 		compareError := self.Comparator.Compare(
+			self.Method,
 			msgBytes, primaryMsg.Error,
 			shadowMsgBytes, shadowErr,
 		)

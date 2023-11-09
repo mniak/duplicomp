@@ -34,15 +34,15 @@ func (m *MockComparator) EXPECT() *MockComparatorMockRecorder {
 }
 
 // Compare mocks base method.
-func (m *MockComparator) Compare(arg0 []byte, arg1 error, arg2 []byte, arg3 error) error {
+func (m *MockComparator) Compare(arg0 string, arg1 []byte, arg2 error, arg3 []byte, arg4 error) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Compare", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Compare", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Compare indicates an expected call of Compare.
-func (mr *MockComparatorMockRecorder) Compare(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockComparatorMockRecorder) Compare(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Compare", reflect.TypeOf((*MockComparator)(nil).Compare), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Compare", reflect.TypeOf((*MockComparator)(nil).Compare), arg0, arg1, arg2, arg3, arg4)
 }

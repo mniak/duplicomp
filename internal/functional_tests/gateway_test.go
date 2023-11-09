@@ -29,6 +29,7 @@ func TestGateway_HappyPath(t *testing.T) {
 	mainLogger := log2.Sub(rootLogger, "TEST ")
 
 	fakePingMessage := gofakeit.SentenceSimple()
+	fakeMethod := gofakeit.BuzzWord()
 
 	// ------- Primary server --------
 	var fakePrimaryPong grpc.Pong
@@ -69,8 +70,8 @@ func TestGateway_HappyPath(t *testing.T) {
 	// ------- Gateway --------
 	time.Sleep(1 * time.Second)
 	mockComparator := NewMockComparator(ctrl)
-	mockComparator.EXPECT().Compare(gomock.Any(), nil, gomock.Any(), nil)
-	mockComparator.EXPECT().Compare(gomock.Any(), io.EOF, gomock.Any(), io.EOF)
+	mockComparator.EXPECT().Compare(fakeMethod, gomock.Any(), nil, gomock.Any(), nil)
+	mockComparator.EXPECT().Compare(fakeMethod, gomock.Any(), io.EOF, gomock.Any(), io.EOF)
 
 	mainLogger.Print("Starting gateway")
 	stopGw, err := duplicomp.StartNewGateway(
