@@ -104,8 +104,8 @@ func (kp KeyPath) String() string {
 }
 
 type FlatDifference struct {
-	KeyPath KeyPath
-	Message string
+	FieldPath KeyPath
+	Message   string
 }
 
 func FlattenDifferences(keyPath KeyPath, diffs []Difference) []FlatDifference {
@@ -116,8 +116,8 @@ func FlattenDifferences(keyPath KeyPath, diffs []Difference) []FlatDifference {
 			FlattenDifferences(keyPath, diff.SubDifferences)
 		} else {
 			result = append(result, FlatDifference{
-				KeyPath: append(keyPath, diff.Key),
-				Message: diff.Message,
+				FieldPath: append(keyPath, diff.Key),
+				Message:   diff.Message,
 			})
 		}
 	}

@@ -51,17 +51,25 @@ func (lc LogComparator) Compare(
 	diffs := CompareMaps(primaryData, shadowData)
 	flatDiffs := FlattenDifferences(nil, diffs)
 
-	evtInfo := lc.logger.Info()
-	for _, diff := range flatDiffs {
-		evtInfo.Str(fmt.Sprintf("key_%s", diff.KeyPath.String()), diff.Message)
-	}
+	var evt *zerolog.Event
 	if len(flatDiffs) > 0 {
-		evtInfo.Bool("has_differences", true).
-			Msg("the two messages are different")
+		evt = lc.logger.Info()
 	} else {
-		lc.logger.Debug().
-			Bool("has_differences", false).
-			Msg("the two messages are equal")
+		evt = lc.logger.Debug()
+	}
+
+	evt.Bool("has differences", len(flatDiffs) > 0)
+	evt.Str("method", methodName)
+	evt.Any("diff", flatDiffs)
+
+	for _, diff := range flatDiffs {
+		evt.Str(fmt.Sprintf("field %s", diff.FieldPath.String()), diff.Message)
+	}
+
+	if len(flatDiffs) > 0 {
+		evt.Msg("the two messages are different")
+	} else {
+		evt.Msg("the two messages are equal")
 	}
 
 	return nil
