@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 
 	"github.com/mniak/duplicomp/pkg/dynpb"
 	"github.com/pkg/errors"
@@ -19,7 +18,6 @@ func (lc LogComparator) Compare(
 	shadowMsg []byte, shadowError error,
 ) error {
 	if primaryError == io.EOF && shadowError == io.EOF {
-		log.Println("BOTH EOF")
 		return nil
 	}
 
