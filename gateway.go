@@ -14,13 +14,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type GatewayParams struct {
-	ListenPort    int
-	PrimaryTarget string
-	ShadowTarget  string
-	Comparator    Comparator
-}
-
 type LambdaConnectionHandler func(ctx context.Context, method string, serverStream Stream) error
 
 func (h LambdaConnectionHandler) HandleConnection(ctx context.Context, method string, serverStream Stream) error {
