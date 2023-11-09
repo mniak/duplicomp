@@ -71,8 +71,12 @@ func TestGateway_HappyPath(t *testing.T) {
 	mainLogger.Print("Starting gateway")
 	stopGw, err := duplicomp.StartNewGateway(
 		fmt.Sprintf(":%d", GATEWAY_PORT),
-		fmt.Sprintf(":%d", PRIMARY_PORT),
-		fmt.Sprintf(":%d", SHADOW_PORT),
+		duplicomp.Target{
+			Address: fmt.Sprintf(":%d", PRIMARY_PORT),
+		},
+		duplicomp.Target{
+			Address: fmt.Sprintf(":%d", SHADOW_PORT),
+		},
 		mockComparator,
 	)
 	defer stopGw.GracefulStop()
