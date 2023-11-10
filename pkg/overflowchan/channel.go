@@ -1,24 +1,26 @@
-package ps121
+package overflowchan
 
 import "sync"
 
-type OverflowChannel[T any] struct {
+type Channel[T any] struct {
 	dataChan     chan T
 	closedSignal chan struct{}
 	onceClose    sync.Once
 }
 
-func NewOverflowableChannel[T any](bufferSize int) OverflowChannel[T] {
+const OverflowableChannelDefaultBufferSize = 2
+
+func New[T any](bufferSize int) Channel[T] {
 	if bufferSize < 1 {
 		bufferSize = OverflowableChannelDefaultBufferSize
 	}
-	return OverflowChannel[T]{
+	return Channel[T]{
 		dataChan:     make(chan T, bufferSize),
 		closedSignal: make(chan struct{}),
 	}
 }
 
-func (self OverflowChannel[T]) Send(val T) {
+func (self Channel[T]) Send(val T) {
 	select {
 	case <-self.closedSignal:
 
@@ -32,13 +34,13 @@ func (self OverflowChannel[T]) Send(val T) {
 	}
 }
 
-func (self OverflowChannel[T]) Close() {
+func (self Channel[T]) Close() {
 	self.onceClose.Do(func() {
 		close(self.closedSignal)
 		close(self.dataChan)
 	})
 }
 
-func (self OverflowChannel[T]) Receiver() <-chan T {
+func (self Channel[T]) Receiver() <-chan T {
 	return self.dataChan
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mniak/ps121/internal/noop"
 	"github.com/mniak/ps121/log2"
+	"github.com/mniak/ps121/pkg/overflowchan"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 )
@@ -31,7 +32,7 @@ type StreamWithShadow struct {
 	BufferSize            int
 
 	onceInit                sync.Once
-	shadowInputChan         OverflowChannel[ReceivedMessage]
+	shadowInputChan         overflowchan.Channel[ReceivedMessage]
 	onceStartShadowReceiver sync.Once
 }
 
@@ -43,7 +44,7 @@ func (self *StreamWithShadow) init() {
 		if self.Comparator == nil {
 			self.Comparator = noop.Comparator()
 		}
-		self.shadowInputChan = NewOverflowableChannel[ReceivedMessage](self.BufferSize)
+		self.shadowInputChan = overflowchan.New[ReceivedMessage](self.BufferSize)
 	})
 }
 
@@ -118,5 +119,3 @@ func (self *StreamWithShadow) Receive() (proto.Message, error) {
 
 	return msg, err
 }
-
-const OverflowableChannelDefaultBufferSize = 2
