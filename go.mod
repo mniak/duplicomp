@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/brianvoe/gofakeit/v6 v6.23.1
 	github.com/golang/protobuf v1.5.3
-	github.com/mniak/duplicomp v0.0.1
+	github.com/mniak/ps121 v0.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/reactivex/rxgo/v2 v2.5.0
 	github.com/rs/zerolog v1.31.0
