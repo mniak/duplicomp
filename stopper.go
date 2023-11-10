@@ -1,4 +1,4 @@
-package duplicomp
+package ps121
 
 type Stopper interface {
 	Stop()

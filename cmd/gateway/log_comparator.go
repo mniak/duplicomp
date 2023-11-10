@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/mniak/duplicomp/pkg/diff"
-	"github.com/mniak/duplicomp/pkg/dynpb"
+	"github.com/mniak/ps121/pkg/diff"
+	"github.com/mniak/ps121/pkg/dynpb"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"

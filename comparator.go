@@ -1,6 +1,6 @@
-package duplicomp
+package ps121
 
-//go:generate mockgen -package=duplicomp -destination=mock_comparator_test.go . Comparator
+//go:generate mockgen -package=ps121 -destination=mock_comparator_test.go . Comparator
 type Comparator interface {
 	Compare(
 		methodName string,

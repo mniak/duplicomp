@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mniak/duplicomp/internal/samples"
+	"github.com/mniak/ps121/internal/samples"
 	"github.com/samber/lo"
 )
 

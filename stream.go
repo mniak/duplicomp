@@ -1,15 +1,15 @@
-package duplicomp
+package ps121
 
 import (
 	"context"
 
-	"github.com/mniak/duplicomp/empty"
+	"github.com/mniak/ps121/empty"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
-//go:generate mockgen -package=duplicomp -destination=mock_stream_test.go . Stream
+//go:generate mockgen -package=ps121 -destination=mock_stream_test.go . Stream
 type Stream interface {
 	InputStream
 	OutputStream

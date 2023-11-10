@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mniak/duplicomp/internal/samples/grpc"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/internal/samples/grpc"
+	"github.com/mniak/ps121/log2"
 	"google.golang.org/grpc/metadata"
 )
 

@@ -1,12 +1,12 @@
-package duplicomp
+package ps121
 
 import (
 	"io"
 	"sync"
 	"time"
 
-	"github.com/mniak/duplicomp/internal/noop"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/internal/noop"
+	"github.com/mniak/ps121/log2"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 )

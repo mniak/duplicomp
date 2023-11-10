@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/mniak/duplicomp/internal/samples/grpc"
+	"github.com/mniak/ps121/internal/samples/grpc"
 	g "google.golang.org/grpc"
 )
 

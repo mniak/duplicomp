@@ -1,4 +1,4 @@
-package duplicomp
+package ps121
 
 import (
 	"github.com/brianvoe/gofakeit/v6"

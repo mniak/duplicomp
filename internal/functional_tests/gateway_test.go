@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp"
-	"github.com/mniak/duplicomp/internal/samples"
-	"github.com/mniak/duplicomp/internal/samples/grpc"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121"
+	"github.com/mniak/ps121/internal/samples"
+	"github.com/mniak/ps121/internal/samples/grpc"
+	"github.com/mniak/ps121/log2"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -74,12 +74,12 @@ func TestGateway_HappyPath(t *testing.T) {
 	mockComparator.EXPECT().Compare(fakeMethod, gomock.Any(), io.EOF, gomock.Any(), io.EOF)
 
 	mainLogger.Print("Starting gateway")
-	stopGw, err := duplicomp.StartNewGateway(
+	stopGw, err := ps121.StartNewGateway(
 		fmt.Sprintf(":%d", GATEWAY_PORT),
-		duplicomp.Target{
+		ps121.Target{
 			Address: fmt.Sprintf(":%d", PRIMARY_PORT),
 		},
-		duplicomp.Target{
+		ps121.Target{
 			Address: fmt.Sprintf(":%d", SHADOW_PORT),
 		},
 		mockComparator,

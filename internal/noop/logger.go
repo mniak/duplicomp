@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/log2"
 )
 
 func Logger() log2.Logger {

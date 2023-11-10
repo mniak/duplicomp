@@ -5,7 +5,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mniak/duplicomp"
+	"github.com/mniak/ps121"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -23,8 +23,8 @@ func main() {
 	config := LoadConfig()
 
 	var listenAddress string
-	var primaryTarget duplicomp.Target
-	var shadowTarget duplicomp.Target
+	var primaryTarget ps121.Target
+	var shadowTarget ps121.Target
 
 	cmd := cobra.Command{
 		Use: "gateway",
@@ -35,7 +35,7 @@ func main() {
 				HintsPerMethod:   config.HintsPerMethod(),
 			}
 
-			stopGw, err := duplicomp.StartNewGateway(
+			stopGw, err := ps121.StartNewGateway(
 				listenAddress,
 				primaryTarget,
 				shadowTarget,

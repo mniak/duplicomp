@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/mniak/duplicomp/internal/noop"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/internal/noop"
+	"github.com/mniak/ps121/log2"
 )
 
 type _Options struct {

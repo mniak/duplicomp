@@ -1,4 +1,4 @@
-package duplicomp
+package ps121
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/log2"
 	"google.golang.org/grpc"
 
 	"google.golang.org/grpc/credentials"
@@ -148,7 +148,7 @@ func (self Target) Connect() (TargetConnection, error) {
 
 	conn, err := grpc.Dial(self.Address,
 		grpc.WithTransportCredentials(clientCredentials),
-		grpc.WithUserAgent("duplicomp-gateway/0.0.1"),
+		grpc.WithUserAgent("ps121-gateway/0.0.1"),
 	)
 	if err != nil {
 		return nil, err

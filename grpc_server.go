@@ -1,11 +1,11 @@
-package duplicomp
+package ps121
 
 import (
 	"context"
 	"net"
 
-	"github.com/mniak/duplicomp/internal/noop"
-	"github.com/mniak/duplicomp/log2"
+	"github.com/mniak/ps121/internal/noop"
+	"github.com/mniak/ps121/log2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

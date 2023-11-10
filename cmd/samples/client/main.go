@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/internal/samples"
+	"github.com/mniak/ps121/internal/samples"
 	"github.com/samber/lo"
 )
 

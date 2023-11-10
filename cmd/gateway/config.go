@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/mniak/duplicomp/pkg/dynpb"
+	"github.com/mniak/ps121/pkg/dynpb"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

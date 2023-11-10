@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/mniak/duplicomp/internal/samples/grpc"
+	"github.com/mniak/ps121/internal/samples/grpc"
 	"github.com/samber/lo"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
