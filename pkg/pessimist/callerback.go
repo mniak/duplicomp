@@ -1,12 +1,12 @@
-package ps121
+package pessimist
 
-type PessimisticCallerback struct {
+type Callerback struct {
 	succeded         bool
 	successCallbacks []func()
 	failureCallbacks []func()
 }
 
-func (self *PessimisticCallerback) Callback() {
+func (self *Callerback) Callback() {
 	if self.succeded {
 		for _, dispose := range self.successCallbacks {
 			if dispose != nil {
@@ -22,14 +22,14 @@ func (self *PessimisticCallerback) Callback() {
 	}
 }
 
-func (self *PessimisticCallerback) OnFailure(fn func()) {
+func (self *Callerback) OnFailure(fn func()) {
 	self.failureCallbacks = append(self.failureCallbacks, fn)
 }
 
-func (self *PessimisticCallerback) OnSuccess(fn func()) {
+func (self *Callerback) OnSuccess(fn func()) {
 	self.successCallbacks = append(self.successCallbacks, fn)
 }
 
-func (self *PessimisticCallerback) Succeeded() {
+func (self *Callerback) Succeeded() {
 	self.succeded = true
 }

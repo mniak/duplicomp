@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mniak/ps121/log2"
+	"github.com/mniak/ps121/pkg/pessimist"
 	"google.golang.org/grpc"
 
 	"google.golang.org/grpc/credentials"
@@ -38,7 +39,7 @@ type _Gateway struct {
 
 func StartNewGateway(listenAddr string, primaryTarget, shadowTarget Target, cmp Comparator) (GracefulStopper, error) {
 	logger := log2.Sub(log.Default(), "[Gateway] ")
-	var cb PessimisticCallerback
+	var cb pessimist.Callerback
 	defer cb.Callback()
 
 	listener, err := net.Listen("tcp", listenAddr)
