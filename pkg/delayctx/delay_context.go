@@ -1,4 +1,4 @@
-package ps121
+package delayctx
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func ContextWithDelay(ctx context.Context, delay time.Duration) context.Context {
+func New(ctx context.Context, delay time.Duration) context.Context {
 	return &_DelayContext{
 		Context: ctx,
 		Delay:   delay,

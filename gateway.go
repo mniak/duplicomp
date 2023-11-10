@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mniak/ps121/log2"
+	"github.com/mniak/ps121/pkg/delayctx"
 	"github.com/mniak/ps121/pkg/pessimist"
 	"google.golang.org/grpc"
 
@@ -87,7 +88,7 @@ func (gw *_Gateway) Start() error {
 				return err
 			}
 
-			shadowCtx := ContextWithDelay(ctx, time.Second*5)
+			shadowCtx := delayctx.New(ctx, time.Second*5)
 			shadowUpstream, err := gw.ShadowConnection.Stream(shadowCtx, method)
 			if err != nil {
 				return err
