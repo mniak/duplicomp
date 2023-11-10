@@ -85,12 +85,6 @@ func (pm ProtoMap) ProtoMapToMap() Object {
 	})
 }
 
-// func ParseProtoMessage(m proto.Message) (ProtoMap, error) {
-// 	unknownBytes := m.ProtoReflect().GetUnknown()
-// 	fields, err := parseProtoBytes(unknownBytes)
-// 	return fields, err
-// }
-
 func parseNumericValue(type_ ProtoType, b []byte) (ProtoValue, int, error) {
 	switch type_ {
 	case TypeVarint:
