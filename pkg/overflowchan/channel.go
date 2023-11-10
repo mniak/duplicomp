@@ -8,11 +8,11 @@ type Channel[T any] struct {
 	onceClose    sync.Once
 }
 
-const OverflowableChannelDefaultBufferSize = 2
+const DefaultBufferSize = 2
 
 func New[T any](bufferSize int) Channel[T] {
 	if bufferSize < 1 {
-		bufferSize = OverflowableChannelDefaultBufferSize
+		bufferSize = DefaultBufferSize
 	}
 	return Channel[T]{
 		dataChan:     make(chan T, bufferSize),
