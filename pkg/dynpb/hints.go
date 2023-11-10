@@ -226,3 +226,24 @@ func (h HintPackedList) Apply(current any, newValue ProtoValue) (any, error) {
 
 	return result, nil
 }
+
+type ObjectHint struct {
+	Hints HintMap
+}
+
+func (h ObjectHint) Apply(current any, newValue ProtoValue) (any, error) {
+	if newValue.Type != TypeBytes {
+		return nil, errors.New("could not get byte slice value for hint")
+	}
+	obj, err := ParseWithHints(newValue.Bytes, h.Hints)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func HintObject(hints HintMap) TypeHint {
+	return ObjectHint{
+		Hints: hints,
+	}
+}

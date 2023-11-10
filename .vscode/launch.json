@@ -56,6 +56,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/gateway",
+            "cwd": "${workspaceFolder}/cmd/gateway",
             "args": [
                 "--listen", ":50053",
                 "--target", "${env:MY_GRPC_APP}",
